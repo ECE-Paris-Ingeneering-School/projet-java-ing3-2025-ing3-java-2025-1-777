@@ -5,6 +5,7 @@ import model.Article;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import Controlers.ShoppingController;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -15,13 +16,14 @@ import java.net.URL;
 public class ProductCardPanel extends JPanel {
     private Article product;
     private ProductController controller;
+    private ShoppingController shoppingController;  // Ajoutez cette ligne
 
     private static final int CARD_WIDTH = 300;
     private static final int CARD_HEIGHT = 400;
 
-    public ProductCardPanel(Article product, ProductController controller) {
+    public ProductCardPanel(Article product, ShoppingController shoppingController) {
         this.product = product;
-        this.controller = controller;
+        this.shoppingController = shoppingController;
         initUI();
     }
 
@@ -66,8 +68,7 @@ public class ProductCardPanel extends JPanel {
         MouseAdapter clickListener = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                ProductDetailFrame detailFrame = new ProductDetailFrame(product, controller);
-                detailFrame.setVisible(true);
+                new ProductDetailFrame(product, shoppingController).setVisible(true);
             }
             @Override
             public void mouseEntered(MouseEvent e) {

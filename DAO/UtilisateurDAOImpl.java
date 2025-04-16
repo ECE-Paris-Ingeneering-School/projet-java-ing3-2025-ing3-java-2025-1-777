@@ -1,7 +1,7 @@
 package DAO;
 
 import model.Utilisateur;
-import Utils.DBConnection;
+import util.DBConnection;
 
 import javax.swing.*;
 import java.sql.*;
@@ -36,6 +36,7 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
         }
         return user;
     }
+
     @Override
     public Utilisateur findByEmailAndPassword(String email, String motDePasse) {
         this.email = email;
@@ -83,23 +84,75 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
     @Override
     public boolean insert(Utilisateur user) {
         String sql = "INSERT INTO Utilisateur (nom, prenom, email, mot_de_passe, role) VALUES (?, ?, ?, ?, ?)";
+
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
             ps.setString(1, user.getNom());
             ps.setString(2, user.getPrenom());
             ps.setString(3, user.getEmail());
-            ps.setString(4, user.getMotDePasse());
-            ps.setString(5, user.getRole());
-            int rows = ps.executeUpdate();
-            return rows > 0;
+            ps.setString(4, user.getMotDePasse()); // Doit être déjà hashé
+            ps.setString(5, user.getRole() != null ? user.getRole() : "client");
+
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows == 0) {
+                return false;
+            }
+
+            // Récupération de l'ID généré
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    user.setIdUtilisateur(rs.getInt(1));
+                }
+            }
+
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null,
-                    "Erreur SQL : " + e.getMessage(),
-                    "Erreur", JOptionPane.ERROR_MESSAGE);
             return false;
         }
+    }
+
+    @Override
+    public boolean emailExists(String email) {
+        String sql = "SELECT COUNT(*) FROM Utilisateur WHERE email = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+        return false;
+    }
+
+    @Override
+    public Utilisateur findByEmail(String email) {
+        Utilisateur user = null;
+        String sql = "SELECT * FROM Utilisateur WHERE email = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                user = new Utilisateur();
+                user.setIdUtilisateur(rs.getInt("id_utilisateur"));
+                user.setNom(rs.getString("nom"));
+                user.setPrenom(rs.getString("prenom"));
+                user.setEmail(rs.getString("email"));
+                user.setMotDePasse(rs.getString("mot_de_passe"));
+                user.setRole(rs.getString("role"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return user;
+    }
+
+
 
 }
 

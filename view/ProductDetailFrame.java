@@ -1,6 +1,8 @@
 package view;
 
 import Controlers.ProductController;
+import Controlers.ShoppingController;
+
 import model.Article;
 
 import javax.imageio.ImageIO;
@@ -13,10 +15,11 @@ import java.net.URL;
 public class ProductDetailFrame extends JFrame {
     private Article product;
     private ProductController controller;
+    private ShoppingController shoppingController;  // Ajoutez cette ligne
 
-    public ProductDetailFrame(Article product, ProductController controller) {
+    public ProductDetailFrame(Article product, ShoppingController shoppingController) {
         this.product = product;
-        this.controller = controller;
+        this.shoppingController = shoppingController;
         initUI();
     }
 
@@ -72,6 +75,32 @@ public class ProductDetailFrame extends JFrame {
         detailsPanel.add(priceLabel);
         detailsPanel.add(Box.createVerticalStrut(20));
         detailsPanel.add(descScroll);
+
+        // Ajouter dans initUI() (après descScroll) :
+        JButton addToCartButton = new JButton("Ajouter au panier");
+        addToCartButton.addActionListener(e -> {
+            if (shoppingController.getCurrentUser() == null) {
+                JOptionPane.showMessageDialog(this,
+                        "Veuillez vous connecter pour ajouter au panier",
+                        "Connexion requise",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            int quantite = 1; // Ou valeur depuis un JSpinner
+            boolean added = shoppingController.getCartController().ajouterAuPanier(product, quantite);
+
+            if (added) {
+                JOptionPane.showMessageDialog(this,
+                        quantite + " x " + product.getNom() + " ajouté(s) au panier !");
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Erreur lors de l'ajout au panier",
+                        "Erreur",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        detailsPanel.add(addToCartButton);
 
         add(detailsPanel, BorderLayout.CENTER);
 

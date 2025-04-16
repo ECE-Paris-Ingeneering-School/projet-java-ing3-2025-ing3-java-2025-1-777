@@ -5,6 +5,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import Controlers.ShoppingController;
 
 /**
  * Barre de navigation inspirée du site Loro Piana
@@ -112,17 +113,28 @@ public class NavigationBarPanel extends JPanel {
                 label.setForeground(MENU_HOVER_COLOR);
                 setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             }
+
             @Override
             public void mouseExited(MouseEvent e) {
                 label.setForeground(TEXT_COLOR);
                 setCursor(Cursor.getDefaultCursor());
             }
+
             @Override
             public void mouseClicked(MouseEvent e) {
-                // Redirect to a new window 
-                SwingUtilities.invokeLater(() -> {
-                    new CustomWindow(text).setVisible(true);
-                });
+                if (text.equals("Panier")) {
+                    // Ouvrir la vue du panier avec le contrôleur existant
+                    if (ShoppingController.getInstance() != null) {
+                        new PanierView(ShoppingController.getInstance().getCartController()).setVisible(true);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Erreur: Contrôleur non initialisé");
+                    }
+                } else {
+                    // Comportement par défaut pour les autres menus
+                    SwingUtilities.invokeLater(() -> {
+                        new CustomWindow(text).setVisible(true);
+                    });
+                }
             }
         });
         return label;

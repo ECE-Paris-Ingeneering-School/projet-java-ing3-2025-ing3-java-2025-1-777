@@ -1,6 +1,7 @@
+package DAO;
 
 import model.Article;
-import Utils.DBConnection;
+import util.DBConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
