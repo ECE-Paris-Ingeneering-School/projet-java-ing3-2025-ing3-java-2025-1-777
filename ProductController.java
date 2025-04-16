@@ -1,8 +1,8 @@
-package Controller;
+package Controlers;
 
 
-import dao.ArticleDAO;
-import dao.ArticleDAOImpl;
+import DAO.ArticleDAO;
+import DAO.ArticleDAOImpl;
 import model.Article;
 import java.util.List;
 
@@ -21,3 +21,4 @@ public class ProductController {
         return articleDAO.findById(id);
     }
 }
+
