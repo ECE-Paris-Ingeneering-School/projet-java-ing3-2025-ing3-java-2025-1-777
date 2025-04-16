@@ -1,11 +1,14 @@
-package dao;
-
-
+package DAO;
 import model.Article;
+
 import java.util.List;
 
-public interface ArticleDAO {
-    List<Article> findAll();
-    Article findById(int id);
-    
+/**
+ * Interface DAO pour l’entité Article.
+ */
+public interface ArticleDAO extends GenericDAO<Article> {
+    // Ajoutez d'autres méthodes spécifiques, par exemple une recherche par marque
+    List<Article> findByMarque(int idMarque);
+
+    List<Article> getAllArticles();
 }
