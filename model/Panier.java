@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Panier {
-    private Map<Article, Integer> articles; // Article + Quantité
-    private int userId; // Nouveau champ
+    private Map<Article, Integer> articles; 
+    private int userId; 
 
     public Panier(int userId) {
         this.userId = userId;
