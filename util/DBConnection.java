@@ -15,9 +15,9 @@ public class DBConnection {
 
     public static void main(String[] args) {
         try (Connection conn = getConnection()) {
-            System.out.println("✅ Connexion réussie à la base Shopping !");
+            System.out.println("Connexion réussie à la base Shopping !");
         } catch (SQLException e) {
-            System.err.println("❌ Erreur de connexion : " + e.getMessage());
+            System.err.println("Erreur de connexion : " + e.getMessage());
         }
     }
 }
