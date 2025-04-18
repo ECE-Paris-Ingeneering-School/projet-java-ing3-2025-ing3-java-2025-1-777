@@ -1,6 +1,5 @@
 package view;
 
-import Controlers.ProductController;
 import Controlers.ShoppingController;
 import model.Article;
 import model.Utilisateur;
@@ -9,49 +8,45 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
+/**
+ * Affichage du catalogue avec les produits 
+ */
 public class CatalogFrame extends JFrame {
-    private ShoppingController shoppingController; // Un seul contrôleur nécessaire
-    private static final Color BACKGROUND_COLOR = new Color(253, 247, 240);
+    private final ShoppingController shoppingController;
 
-    // Constructeur principal
-    public CatalogFrame(ShoppingController shoppingController) {
-        this.shoppingController = shoppingController;
-        initUI();
-    }
-
-    // Constructeur avec utilisateur (à implémenter plus tard)
     public CatalogFrame(Utilisateur utilisateur, ShoppingController controller) {
         this.shoppingController = controller;
-        initUI();
-        // Ajoutez ici les personnalisations pour l'utilisateur connecté
+        initUI(utilisateur);
     }
 
-    private void initUI() {
+    private void initUI(Utilisateur utilisateur) {
         setTitle("Loro Piana - Catalogue");
         setSize(1200, 800);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        getContentPane().setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         setLayout(new BorderLayout());
 
-        getContentPane().setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+        
+        add(new NavigationBarPanel(), BorderLayout.NORTH);
 
-        NavigationBarPanel navBar = new NavigationBarPanel();
-        add(navBar, BorderLayout.NORTH);
-
-        JPanel catalogPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
+        //  grille de produits 
+        JPanel catalogPanel = new JPanel();
         catalogPanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         catalogPanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+        catalogPanel.setLayout(new GridLayout(0, 3, 20, 20));
 
-        // BOUCLE CORRIGÉE - Utilisation de shoppingController
         List<Article> products = shoppingController.getCatalogue();
         for (Article product : products) {
             ProductCardPanel card = new ProductCardPanel(product, shoppingController);
             catalogPanel.add(card);
         }
 
-        JScrollPane scrollPane = new JScrollPane(catalogPanel,
+        JScrollPane scrollPane = new JScrollPane(
+                catalogPanel,
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        );
         scrollPane.setBorder(null);
         scrollPane.getViewport().setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         add(scrollPane, BorderLayout.CENTER);
