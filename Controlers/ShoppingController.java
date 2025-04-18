@@ -26,7 +26,7 @@ public class ShoppingController {
 
     public CartController getCartController() {
         if (cartController == null) {
-            throw new IllegalStateException("CartController non initialisé. Connectez-vous d'abord.");
+            throw new IllegalStateException("Connectez-vous d'abord.");
         }
         return cartController;
     }
