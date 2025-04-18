@@ -18,14 +18,14 @@ public class LoginFrame extends JFrame {
     private JPasswordField passwordField;
     private JButton loginButton;
     private JButton signUpButton;
-
-    // Contrôleur
     private final ShoppingController controller;
 
-    public LoginFrame() {
-        controller = new ShoppingController();
+
+    public LoginFrame(ShoppingController controller) {
+        this.controller = controller;
         initUI();
     }
+
 
 
     private void initUI() {
