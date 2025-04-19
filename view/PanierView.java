@@ -8,6 +8,10 @@ import java.awt.*;
 
 public class PanierView extends JFrame {
     private CartController cartController;
+    // nouveau constructeur par défaut
+    public PanierView() {
+        this(CartController.getInstance());
+    }
 
     public PanierView(CartController cartController) {
         this.cartController = cartController;
@@ -92,7 +96,7 @@ public class PanierView extends JFrame {
         checkoutButton.setForeground(NavigationBarPanel.MENU_HOVER_COLOR);
         checkoutButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         checkoutButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        checkoutButton.addActionListener(e -> new CheckoutFrame(cartController).setVisible(true));
+        checkoutButton.addActionListener(e -> new CheckoutFrame(CartController.getInstance()).setVisible(true));
         footerPanel.add(checkoutButton);
 
         add(footerPanel, BorderLayout.SOUTH);
