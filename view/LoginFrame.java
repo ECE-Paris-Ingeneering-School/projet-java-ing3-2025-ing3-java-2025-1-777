@@ -9,31 +9,32 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-/**
- * Fenêtre de connexion avec un look plus "moderne" inspiré de Zalando.
- */
+
 public class LoginFrame extends JFrame {
 
     private JTextField emailField;
     private JPasswordField passwordField;
     private JButton loginButton;
     private JButton signUpButton;
+
+
     private final ShoppingController controller;
 
-
-    public LoginFrame(ShoppingController controller) {
-        this.controller = controller;
+    public LoginFrame() {
+        controller = new ShoppingController();
         initUI();
     }
 
-
+    /**
+     * Méthode principale de configuration de l'UI.
+     */
     private void initUI() {
         setTitle("Connexion");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(480, 320);
         setLocationRelativeTo(null);
 
-    
+        // On applique un layout BorderLayout global
         setLayout(new BorderLayout());
 
         // header
@@ -41,9 +42,8 @@ public class LoginFrame extends JFrame {
         headerPanel.setBackground(Color.WHITE);
         headerPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 10));
 
-    
+       
 
-        // Titre "Connexion"
         JLabel headerLabel = new JLabel("Connexion");
         headerLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
         headerLabel.setForeground(Color.BLACK);
@@ -51,7 +51,7 @@ public class LoginFrame extends JFrame {
 
         add(headerPanel, BorderLayout.NORTH);
 
-        // 2) Panel central : formulaire (email, mot de passe)
+        // formulaire (email, mot de passe)
         JPanel formPanel = new JPanel();
         formPanel.setBackground(Color.WHITE);
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
@@ -115,13 +115,12 @@ public class LoginFrame extends JFrame {
         signUpButton.setForeground(new Color(150, 100, 80 ));
         signUpButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         signUpButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-       
+
 
         formPanel.add(signUpButton, gbc);
 
         add(formPanel, BorderLayout.CENTER);
 
-        // footer
         JPanel footerPanel = new JPanel();
         footerPanel.setBackground(Color.WHITE);
         footerPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
@@ -132,68 +131,42 @@ public class LoginFrame extends JFrame {
 
         add(footerPanel, BorderLayout.SOUTH);
 
-        // Ajout des listeners sur les boutons
+ 
         initListeners();
     }
 
     /**
-     * Initialise les événements .
+     * Initialise les événements 
      */
     private void initListeners() {
-
+      
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String email = emailField.getText().trim();
                 String password = new String(passwordField.getPassword()).trim();
-
-                // Validation basique des champs
-                if (email.isEmpty() || password.isEmpty()) {
+               
+                Utilisateur utilisateur = controller.login(email, password);
+                if (utilisateur != null) {
                     JOptionPane.showMessageDialog(
                             LoginFrame.this,
-                            "Veuillez remplir tous les champs",
-                            "Erreur",
-                            JOptionPane.WARNING_MESSAGE
+                            "Connexion réussie ! Bienvenue " + utilisateur.getPrenom() + " " + utilisateur.getNom(),
+                            "Succès",
+                            JOptionPane.INFORMATION_MESSAGE
                     );
-                    return;
-                }
-
-                try {
-                    // 1. Authentification
-                    Utilisateur utilisateur = controller.login(email, password);
-
-                    if (utilisateur != null && utilisateur.getIdUtilisateur() > 0) {
-                        // 2. Vérification cruciale de l'ID
-                        System.out.println("Login réussi pour userID: " + utilisateur.getIdUtilisateur()); // Debug
-
-                        // 3. Initialisation du panier
-                        controller.initializePanier(utilisateur.getIdUtilisateur());
-
-                        JOptionPane.showMessageDialog(
-                                LoginFrame.this,
-                                "Connexion réussie ! Bienvenue " + utilisateur.getPrenom(),
-                                "Succès",
-                                JOptionPane.INFORMATION_MESSAGE
-                        );
-
-                        // 4. Ouverture de la vue catalogue
-                        CatalogFrame catalogFrame = new CatalogFrame(utilisateur, controller);
-                        catalogFrame.setVisible(true);
-
-                        // 5. Fermeture propre
-                        LoginFrame.this.dispose();
-                    } else {
-                        throw new Exception("Identifiants invalides ou problème de compte");
-                    }
-                } catch (Exception ex) {
-                    System.err.println("Erreur login: " + ex.getMessage());
+                   
+                    new HomeFrame().setVisible(true);
+                    // Fermer la fenêtre de connexion
+                    LoginFrame.this.dispose();
+                } else {
                     JOptionPane.showMessageDialog(
                             LoginFrame.this,
-                            "Échec de connexion : " + ex.getMessage(),
+                            "Email ou mot de passe incorrect !",
                             "Erreur",
                             JOptionPane.ERROR_MESSAGE
                     );
                 }
+
             }
         });
 
@@ -201,10 +174,9 @@ public class LoginFrame extends JFrame {
         signUpButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Ouvrir la fenêtre de création de compte (SignUpFrame)
+                // Ouvrir la fenêtre de création de compte 
                 new SignUpFrame().setVisible(true);
             }
         });
     }
 }
-
