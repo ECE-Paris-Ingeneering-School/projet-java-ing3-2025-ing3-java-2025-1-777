@@ -26,7 +26,6 @@ public class SignUpFrame extends JFrame {
         initComponents();
     }
 
-
     private void initComponents() {
         setTitle("Création de compte");
         setSize(480, 320);

@@ -27,7 +27,6 @@ public class LoginFrame extends JFrame {
     }
 
 
-
     private void initUI() {
         setTitle("Connexion");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
