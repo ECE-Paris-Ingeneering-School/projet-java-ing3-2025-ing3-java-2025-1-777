@@ -1,12 +1,12 @@
 package view;
 
-import Controlers.ProductController;
 import Controlers.ShoppingController;
-
+import Controlers.CartController;
 import model.Article;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -14,12 +14,13 @@ import java.net.URL;
 
 public class ProductDetailFrame extends JFrame {
     private Article product;
-    private ProductController controller;
-    private ShoppingController shoppingController;  // Ajoutez cette ligne
+    private ShoppingController controller;
+    private CartController cartController;
 
-    public ProductDetailFrame(Article product, ShoppingController shoppingController) {
+    public ProductDetailFrame(Article product, ShoppingController controller) {
         this.product = product;
-        this.shoppingController = shoppingController;
+        this.controller = controller;
+        this.cartController = cartController;
         initUI();
     }
 
@@ -28,7 +29,7 @@ public class ProductDetailFrame extends JFrame {
         setSize(800, 600);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-        getContentPane().setBackground(Color.WHITE);
+        getContentPane().setBackground(NavigationBarPanel.BACKGROUND_COLOR);
 
         // Grande image en haut
         JLabel imageLabel = new JLabel();
@@ -37,38 +38,40 @@ public class ProductDetailFrame extends JFrame {
         if (imageIcon != null) {
             int newWidth = 700;
             int newHeight = (int)(((double) imageIcon.getIconHeight() / imageIcon.getIconWidth()) * newWidth);
-            Image scaledImage = imageIcon.getImage().getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+            Image scaledImage = imageIcon.getImage()
+                    .getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
             imageLabel.setIcon(new ImageIcon(scaledImage));
         } else {
             imageLabel.setText("Aucune image disponible");
-            imageLabel.setForeground(Color.DARK_GRAY);
+            imageLabel.setForeground(NavigationBarPanel.TEXT_COLOR);
         }
         add(imageLabel, BorderLayout.NORTH);
 
         // Détails du produit
         JPanel detailsPanel = new JPanel();
         detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
-        detailsPanel.setBackground(Color.WHITE);
-        detailsPanel.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
+        detailsPanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+        detailsPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         JLabel nameLabel = new JLabel(product.getNom());
         nameLabel.setFont(new Font("Serif", Font.BOLD, 28));
-        nameLabel.setForeground(Color.BLACK);
+        nameLabel.setForeground(NavigationBarPanel.TEXT_COLOR);
 
         JLabel priceLabel = new JLabel(String.format("%.2f €", product.getPrixUnitaire()));
         priceLabel.setFont(new Font("SansSerif", Font.PLAIN, 24));
-        priceLabel.setForeground(Color.DARK_GRAY);
+        priceLabel.setForeground(NavigationBarPanel.MENU_HOVER_COLOR);
 
         JTextArea descArea = new JTextArea(product.getDescription());
         descArea.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        descArea.setForeground(Color.DARK_GRAY);
+        descArea.setForeground(NavigationBarPanel.TEXT_COLOR);
         descArea.setLineWrap(true);
         descArea.setWrapStyleWord(true);
         descArea.setEditable(false);
-        descArea.setBackground(Color.WHITE);
+        descArea.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
 
         JScrollPane descScroll = new JScrollPane(descArea);
         descScroll.setBorder(null);
+        descScroll.getViewport().setBackground(NavigationBarPanel.BACKGROUND_COLOR);
 
         detailsPanel.add(nameLabel);
         detailsPanel.add(Box.createVerticalStrut(10));
@@ -76,40 +79,36 @@ public class ProductDetailFrame extends JFrame {
         detailsPanel.add(Box.createVerticalStrut(20));
         detailsPanel.add(descScroll);
 
-        // Ajouter dans initUI() (après descScroll) :
-        JButton addToCartButton = new JButton("Ajouter au panier");
-        addToCartButton.addActionListener(e -> {
-            if (shoppingController.getCurrentUser() == null) {
-                JOptionPane.showMessageDialog(this,
-                        "Veuillez vous connecter pour ajouter au panier",
-                        "Connexion requise",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            int quantite = 1; // Ou valeur depuis un JSpinner
-            boolean added = shoppingController.getCartController().ajouterAuPanier(product, quantite);
-
-            if (added) {
-                JOptionPane.showMessageDialog(this,
-                        quantite + " x " + product.getNom() + " ajouté(s) au panier !");
-            } else {
-                JOptionPane.showMessageDialog(this,
-                        "Erreur lors de l'ajout au panier",
-                        "Erreur",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-        });
-        detailsPanel.add(addToCartButton);
-
         add(detailsPanel, BorderLayout.CENTER);
 
-        // Bouton Retour
+        // Footer : bouton Ajouter au panier + Retour
         JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        footerPanel.setBackground(Color.WHITE);
+        footerPanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+
+        JButton addToCartBtn = new JButton("Ajouter au panier");
+        addToCartBtn.setFocusPainted(false);
+        addToCartBtn.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+        addToCartBtn.setForeground(NavigationBarPanel.MENU_HOVER_COLOR);
+        addToCartBtn.setForeground(NavigationBarPanel.TEXT_COLOR);
+        addToCartBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        addToCartBtn.addActionListener(e -> {
+            Controlers.CartController.getInstance().ajouterAuPanier(product, 1);
+            JOptionPane.showMessageDialog(this,
+                    "« " + product.getNom() + " » a été ajouté au panier.",
+                    "Confirmation",
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
+        footerPanel.add(addToCartBtn);
+
         JButton backButton = new JButton("Retour");
+        backButton.setFocusPainted(false);
+        backButton.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+        backButton.setForeground(NavigationBarPanel.MENU_HOVER_COLOR);
+        backButton.setForeground(NavigationBarPanel.TEXT_COLOR);
+        backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         backButton.addActionListener(e -> this.dispose());
         footerPanel.add(backButton);
+
         add(footerPanel, BorderLayout.SOUTH);
     }
 
