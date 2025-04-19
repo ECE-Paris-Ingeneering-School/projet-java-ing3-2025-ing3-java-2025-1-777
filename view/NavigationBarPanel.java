@@ -9,27 +9,27 @@ import Controlers.ShoppingController;
 
 /**
  * Barre de navigation inspirée du site Loro Piana
- 
+
  */
 public class NavigationBarPanel extends JPanel {
 
-    //  couleurs 
-    public static final Color BACKGROUND_COLOR = new Color(253, 247, 240); 
-    private static final Color LINE_COLOR = new Color(111, 57, 46);         
-    private static final Color TEXT_COLOR = new Color(111, 57, 46);         
-    private static final Color MENU_HOVER_COLOR = new Color(150, 100, 80);    
+    //  couleurs
+    public static final Color BACKGROUND_COLOR = new Color(253, 247, 240);
+    static final Color LINE_COLOR = new Color(111, 57, 46);
+    static final Color TEXT_COLOR = new Color(111, 57, 46);
+    static final Color MENU_HOVER_COLOR = new Color(150, 100, 80);
 
     public NavigationBarPanel() {
         initUI();
     }
 
     private void initUI() {
-        // Barre de navigation 
+        // Barre de navigation
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(BACKGROUND_COLOR);
         setBorder(new EmptyBorder(0, 0, 0, 0));
 
-       
+
         JPanel topMessagePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         topMessagePanel.setBackground(BACKGROUND_COLOR);
         JLabel topMessage = new JLabel("Découvrez la pièce iconique");
@@ -52,22 +52,22 @@ public class NavigationBarPanel extends JPanel {
         separatorPanel.setPreferredSize(new Dimension(getWidth(), 2));
         add(separatorPanel); // 2ème ligne
 
-        // Barre de menu principale 
+        // Barre de menu principale
         JPanel menuPanel = new JPanel(new BorderLayout());
         menuPanel.setBackground(BACKGROUND_COLOR);
 
-        // Logo 
+        // Logo
         JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setBackground(BACKGROUND_COLOR);
         leftPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        
+
         ImageIcon logoIcon = new ImageIcon("logo_loropiana.png");
-     
+
         JLabel logoLabel = new JLabel(logoIcon);
         logoLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         leftPanel.add(logoLabel);
-        
+
         JLabel collectionLabel = new JLabel("Loro Piana");
         collectionLabel.setFont(new Font("Snell Roundhand", Font.PLAIN, 30));
         collectionLabel.setForeground(TEXT_COLOR);
@@ -78,7 +78,7 @@ public class NavigationBarPanel extends JPanel {
         // onglets de navigation
         JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         centerPanel.setBackground(BACKGROUND_COLOR);
-        String[] menuItems = {"Homme", "Femme", "Enfant", "Cadeaux", "Art de Vivre"};
+        String[] menuItems = {"Articles", "Enfant", "Cadeaux", "Art de Vivre"};
         for (String item : menuItems) {
             JLabel menuLabel = createMenuLabel(item);
             centerPanel.add(menuLabel);
@@ -95,13 +95,14 @@ public class NavigationBarPanel extends JPanel {
         }
         menuPanel.add(rightPanel, BorderLayout.EAST);
 
-        add(menuPanel); 
+        add(menuPanel);
     }
 
     /**
      * Crée un JLabel servant de menu cliquable.
-     
+
      */
+
     private JLabel createMenuLabel(String text) {
         JLabel label = new JLabel(text);
         label.setForeground(TEXT_COLOR);
@@ -122,10 +123,10 @@ public class NavigationBarPanel extends JPanel {
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (text.equals("Panier")) {
+                if ("Panier".equals(text)) {
                     // Ouvrir la vue du panier avec le contrôleur existant
                     if (ShoppingController.getInstance() != null) {
-                        new PanierView(ShoppingController.getInstance().getCartController()).setVisible(true);
+                        new PanierView().setVisible(true);
                     } else {
                         JOptionPane.showMessageDialog(null, "Erreur: Contrôleur non initialisé");
                     }
@@ -140,7 +141,7 @@ public class NavigationBarPanel extends JPanel {
         return label;
     }
 
-   
+
     public static class CustomWindow extends JFrame {
         public CustomWindow(String menuItem) {
             setTitle("Loro Piana - " + menuItem);
@@ -149,7 +150,7 @@ public class NavigationBarPanel extends JPanel {
             setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             setLayout(new BorderLayout());
 
-         
+
             getContentPane().setBackground(BACKGROUND_COLOR);
 
             NavigationBarPanel navBar = new NavigationBarPanel();
@@ -167,7 +168,7 @@ public class NavigationBarPanel extends JPanel {
         }
     }
 
-  
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Test Barre de Navigation Loro Piana");
