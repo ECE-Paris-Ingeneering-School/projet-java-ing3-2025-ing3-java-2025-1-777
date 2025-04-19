@@ -27,8 +27,8 @@ public class CatalogFrame extends JFrame {
         getContentPane().setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         setLayout(new BorderLayout());
 
-        
-        add(new NavigationBarPanel(), BorderLayout.NORTH);
+
+        add(new NavigationBarPanel(shoppingController), BorderLayout.NORTH);
 
         //  grille de produits 
         JPanel catalogPanel = new JPanel();

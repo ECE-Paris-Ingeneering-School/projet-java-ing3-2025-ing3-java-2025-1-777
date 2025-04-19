@@ -9,6 +9,8 @@ import java.awt.event.ActionEvent;
 import java.util.Map;
 
 public class CheckoutFrame extends JFrame {
+
+
     public CheckoutFrame(CartController cartController) {
         setTitle("Validation de commande");
         setSize(600, 400);
@@ -31,6 +33,8 @@ public class CheckoutFrame extends JFrame {
             recapPanel.add(itemPanel);
         }
 
+
+
         // Panel total
         JPanel totalPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         totalPanel.add(new JLabel("Total: " + String.format("%.2f €", cartController.getTotalAvecRemises())));
@@ -47,17 +51,52 @@ public class CheckoutFrame extends JFrame {
         // Bouton de confirmation
         JButton confirmButton = new JButton("Confirmer la commande");
         confirmButton.addActionListener((ActionEvent e) -> {
-            if (validateForm(addressField.getText(), cardField.getText())) {
+            if (cartController.getPanier().getUserId() <= 0) {
+                JOptionPane.showMessageDialog(this,
+                        "Aucun utilisateur connecté",
+                        "Erreur",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // 1. Validation du formulaire
+            if (!validateForm(addressField.getText(), cardField.getText())) {
+                return;
+            }
+
+            // 2. Vérification du stock
+            if (!cartController.isStockAvailable()) {
+                JOptionPane.showMessageDialog(this,
+                        "Stock insuffisant pour certains articles",
+                        "Erreur",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // 3. Passage de la commande
+            try {
                 boolean success = new CommandeDAOImpl().creerCommande(
                         cartController.getPanier(),
                         addressField.getText()
                 );
 
                 if (success) {
-                    JOptionPane.showMessageDialog(this, "Commande validée avec succès !");
+                    // 4. Affichage confirmation
+                    new OrderConfirmationFrame(
+                            cartController.getPanier().calculerTotal()
+                    ).setVisible(true);
+
+                    // 5. Nettoyage
                     cartController.viderPanier();
                     dispose();
+                } else {
+                    throw new Exception("Échec de la commande");
                 }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Erreur lors de la commande: " + ex.getMessage(),
+                        "Erreur",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -68,11 +107,27 @@ public class CheckoutFrame extends JFrame {
         add(confirmButton, BorderLayout.SOUTH);
     }
 
+
+
     private boolean validateForm(String address, String card) {
-        if (address.isEmpty() || card.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Veuillez remplir tous les champs", "Erreur", JOptionPane.ERROR_MESSAGE);
+        if (address.trim().isEmpty() || card.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Tous les champs sont obligatoires",
+                    "Erreur",
+                    JOptionPane.ERROR_MESSAGE);
             return false;
         }
+
+        if (!card.matches("\\d{16}")) {
+            JOptionPane.showMessageDialog(this,
+                    "Numéro de carte invalide (16 chiffres requis)",
+                    "Erreur",
+                    JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
         return true;
     }
+
+
 }

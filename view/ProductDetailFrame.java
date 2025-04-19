@@ -18,9 +18,17 @@ public class ProductDetailFrame extends JFrame {
     private CartController cartController;
 
     public ProductDetailFrame(Article product, ShoppingController controller) {
+        if (product == null || controller == null) {
+            throw new IllegalArgumentException("Arguments ne peuvent pas être null");
+        }
         this.product = product;
         this.controller = controller;
-        this.cartController = cartController;
+        this.cartController = controller.getCartController();
+
+        if (this.cartController == null) {
+            throw new IllegalStateException("CartController non disponible");
+        }
+
         initUI();
     }
 
@@ -92,11 +100,17 @@ public class ProductDetailFrame extends JFrame {
         addToCartBtn.setForeground(NavigationBarPanel.TEXT_COLOR);
         addToCartBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         addToCartBtn.addActionListener(e -> {
-            Controlers.CartController.getInstance().ajouterAuPanier(product, 1);
-            JOptionPane.showMessageDialog(this,
-                    "« " + product.getNom() + " » a été ajouté au panier.",
-                    "Confirmation",
-                    JOptionPane.INFORMATION_MESSAGE);
+            if (cartController.ajouterAuPanier(product, 1)) {
+                JOptionPane.showMessageDialog(this,
+                        "« " + product.getNom() + " » a été ajouté au panier.",
+                        "Confirmation",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Erreur lors de l'ajout au panier",
+                        "Erreur",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         });
         footerPanel.add(addToCartBtn);
 

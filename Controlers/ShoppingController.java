@@ -20,10 +20,11 @@ public class ShoppingController {
     private Utilisateur currentUser;
     private UtilisateurDAO utilisateurDAO;
     private ArticleDAO articleDAO;
-    private static CartController cartController;
+    private CartController cartController;
     private static ShoppingController instance;
     private int currentUserId;
     private DiscountDAO discountDAO;
+
 
     public ShoppingController() {
         this.utilisateurDAO = new UtilisateurDAOImpl();
@@ -33,7 +34,7 @@ public class ShoppingController {
 
     public CartController getCartController() {
         if (cartController == null) {
-            throw new IllegalStateException("Connectez-vous d'abord.");
+            throw new IllegalStateException("Aucun utilisateur connecté");
         }
         return cartController;
     }
@@ -45,8 +46,15 @@ public class ShoppingController {
         return instance;
     }
 
+
+
+    // Dans ShoppingController.java
     public void initializePanier(int userId) {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("ID utilisateur invalide");
+        }
         this.cartController = new CartController(userId);
+        System.out.println("Panier initialisé pour userID: " + userId); // Debug
     }
 
     public List<Article> getCatalogue() {
@@ -123,5 +131,14 @@ public class ShoppingController {
 
         return prix;
     }
+
+
+
+
+    public boolean isUserLoggedIn() {
+        return this.currentUser != null && this.cartController != null;
+    }
+
+
 
 }

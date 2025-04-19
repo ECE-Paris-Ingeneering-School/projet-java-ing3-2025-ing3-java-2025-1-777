@@ -4,17 +4,26 @@ import Controlers.CartController;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import Controlers.ShoppingController;
 
 
 public class PanierView extends JFrame {
     private CartController cartController;
-    // nouveau constructeur par défaut
-    public PanierView() {
-        this(CartController.getInstance());
-    }
+    private ShoppingController shoppingController; // Ajoutez cette ligne
 
-    public PanierView(CartController cartController) {
-        this.cartController = cartController;
+    // Constructeur modifié
+    public PanierView(ShoppingController shoppingController) {
+        this.shoppingController = shoppingController;
+        this.cartController = shoppingController.getCartController(); // Obtenez le CartController via ShoppingController
+
+        // Vérification de connexion
+        if (shoppingController.getCurrentUser() == null) {
+            JOptionPane.showMessageDialog(null, "Veuillez vous connecter d'abord");
+            this.dispose();
+            return;
+        }
+
+        this.cartController = shoppingController.getCartController();
         initUI();
         setTitle("Panier – Loro Piana");
         setSize(800, 600);
@@ -96,7 +105,14 @@ public class PanierView extends JFrame {
         checkoutButton.setForeground(NavigationBarPanel.MENU_HOVER_COLOR);
         checkoutButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         checkoutButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        checkoutButton.addActionListener(e -> new CheckoutFrame(CartController.getInstance()).setVisible(true));
+        checkoutButton.addActionListener(e -> {
+            // Vérifier que le panier n'est pas vide avant d'ouvrir CheckoutFrame
+            if (cartController.getPanier().getArticles().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Votre panier est vide", "Erreur", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            new CheckoutFrame(cartController).setVisible(true);
+        });
         footerPanel.add(checkoutButton);
 
         add(footerPanel, BorderLayout.SOUTH);

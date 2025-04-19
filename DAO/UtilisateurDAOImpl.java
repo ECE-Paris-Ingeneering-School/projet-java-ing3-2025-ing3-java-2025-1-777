@@ -38,29 +38,35 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
     }
 
     @Override
-    public Utilisateur findByEmailAndPassword(String email, String motDePasse) {
-        this.email = email;
-        this.motDePasse = motDePasse;
-        Utilisateur user = null;
+    public Utilisateur findByEmailAndPassword(String email, String password) {
         String sql = "SELECT * FROM Utilisateur WHERE email = ? AND mot_de_passe = ?";
+
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, email.trim());
-            ps.setString(2, motDePasse.trim());
+
+            ps.setString(1, email);
+            ps.setString(2, password); // À hasher en production
+
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                user = new Utilisateur();
+                Utilisateur user = new Utilisateur();
+                // Remplissage COMPLET des champs
                 user.setIdUtilisateur(rs.getInt("id_utilisateur"));
                 user.setNom(rs.getString("nom"));
                 user.setPrenom(rs.getString("prenom"));
                 user.setEmail(rs.getString("email"));
-                user.setMotDePasse(rs.getString("mot_de_passe"));
-                user.setRole(rs.getString("role"));
+                user.setMotDePasse(rs.getString("mot_de_passe")); // Normalement pas nécessaire après login
+                user.setRole(rs.getString("role")); // Important pour les vérifications
+
+                System.out.println("Utilisateur trouvé: ID=" + user.getIdUtilisateur()); // Debug
+                return user;
             }
         } catch (SQLException e) {
+            System.err.println("Erreur lors de la recherche utilisateur:");
             e.printStackTrace();
         }
-        return user;
+        System.out.println("Aucun utilisateur trouvé pour: " + email); // Debug
+        return null;
     }
 
 

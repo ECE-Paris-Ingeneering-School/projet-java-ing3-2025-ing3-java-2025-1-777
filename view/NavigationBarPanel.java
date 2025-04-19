@@ -13,13 +13,16 @@ import Controlers.ShoppingController;
  */
 public class NavigationBarPanel extends JPanel {
 
+    private final ShoppingController shoppingController;
+
     //  couleurs
     public static final Color BACKGROUND_COLOR = new Color(253, 247, 240);
     static final Color LINE_COLOR = new Color(111, 57, 46);
     static final Color TEXT_COLOR = new Color(111, 57, 46);
     static final Color MENU_HOVER_COLOR = new Color(150, 100, 80);
 
-    public NavigationBarPanel() {
+    public NavigationBarPanel(ShoppingController shoppingController) {
+        this.shoppingController = shoppingController;
         initUI();
     }
 
@@ -124,17 +127,9 @@ public class NavigationBarPanel extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if ("Panier".equals(text)) {
-                    // Ouvrir la vue du panier avec le contrôleur existant
-                    if (ShoppingController.getInstance() != null) {
-                        new PanierView().setVisible(true);
-                    } else {
-                        JOptionPane.showMessageDialog(null, "Erreur: Contrôleur non initialisé");
-                    }
+                    new PanierView(shoppingController).setVisible(true);
                 } else {
-                    // Comportement par défaut pour les autres menus
-                    SwingUtilities.invokeLater(() -> {
-                        new CustomWindow(text).setVisible(true);
-                    });
+                    new CustomWindow(text, shoppingController).setVisible(true);  // Passez le contrôleur
                 }
             }
         });
@@ -143,17 +138,17 @@ public class NavigationBarPanel extends JPanel {
 
 
     public static class CustomWindow extends JFrame {
-        public CustomWindow(String menuItem) {
+        public CustomWindow(String menuItem, ShoppingController shoppingController) {  // Ajoutez le paramètre
             setTitle("Loro Piana - " + menuItem);
             setSize(1200, 800);
             setLocationRelativeTo(null);
             setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             setLayout(new BorderLayout());
 
-
             getContentPane().setBackground(BACKGROUND_COLOR);
 
-            NavigationBarPanel navBar = new NavigationBarPanel();
+            // Passez le shoppingController au constructeur
+            NavigationBarPanel navBar = new NavigationBarPanel(shoppingController);
             add(navBar, BorderLayout.NORTH);
 
             JPanel contentPanel = new JPanel(new BorderLayout());
@@ -168,15 +163,4 @@ public class NavigationBarPanel extends JPanel {
         }
     }
 
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Test Barre de Navigation Loro Piana");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(1200, 200);
-            frame.add(new NavigationBarPanel(), BorderLayout.NORTH);
-            frame.setLocationRelativeTo(null);
-            frame.setVisible(true);
-        });
-    }
 }

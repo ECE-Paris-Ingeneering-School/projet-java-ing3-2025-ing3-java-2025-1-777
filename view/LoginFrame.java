@@ -140,34 +140,60 @@ public class LoginFrame extends JFrame {
      * Initialise les événements .
      */
     private void initListeners() {
-        
+
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String email = emailField.getText().trim();
                 String password = new String(passwordField.getPassword()).trim();
-                // Vérification via le contrôleur
-                Utilisateur utilisateur = controller.login(email, password);
-                if (utilisateur != null) {
+
+                // Validation basique des champs
+                if (email.isEmpty() || password.isEmpty()) {
                     JOptionPane.showMessageDialog(
                             LoginFrame.this,
-                            "Connexion réussie ! Bienvenue " + utilisateur.getPrenom() + " " + utilisateur.getNom(),
-                            "Succès",
-                            JOptionPane.INFORMATION_MESSAGE
+                            "Veuillez remplir tous les champs",
+                            "Erreur",
+                            JOptionPane.WARNING_MESSAGE
                     );
-                    // Ouvrir la fenêtre principale du catalogue
-                    new CatalogFrame(utilisateur, controller).setVisible(true);
-                    // Fermer la fenêtre de connexion
-                    LoginFrame.this.dispose();
-                } else {
+                    return;
+                }
+
+                try {
+                    // 1. Authentification
+                    Utilisateur utilisateur = controller.login(email, password);
+
+                    if (utilisateur != null && utilisateur.getIdUtilisateur() > 0) {
+                        // 2. Vérification cruciale de l'ID
+                        System.out.println("Login réussi pour userID: " + utilisateur.getIdUtilisateur()); // Debug
+
+                        // 3. Initialisation du panier
+                        controller.initializePanier(utilisateur.getIdUtilisateur());
+
+                        JOptionPane.showMessageDialog(
+                                LoginFrame.this,
+                                "Connexion réussie ! Bienvenue " + utilisateur.getPrenom(),
+                                "Succès",
+                                JOptionPane.INFORMATION_MESSAGE
+                        );
+
+                        // 4. Ouverture de la vue catalogue
+                        CatalogFrame catalogFrame = new CatalogFrame(utilisateur, controller);
+                        catalogFrame.setVisible(true);
+
+                        // 5. Fermeture propre
+                        LoginFrame.this.dispose();
+                    } else {
+                        throw new Exception("Identifiants invalides ou problème de compte");
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Erreur login: " + ex.getMessage());
                     JOptionPane.showMessageDialog(
                             LoginFrame.this,
-                            "Email ou mot de passe incorrect !",
+                            "Échec de connexion : " + ex.getMessage(),
                             "Erreur",
                             JOptionPane.ERROR_MESSAGE
                     );
                 }
-
             }
         });
 

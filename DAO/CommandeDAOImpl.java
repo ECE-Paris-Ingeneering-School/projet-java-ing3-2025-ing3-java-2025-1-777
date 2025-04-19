@@ -16,9 +16,11 @@ public class CommandeDAOImpl implements CommandeDAO {
     @Override
     public boolean creerCommande(Panier panier, String adresseLivraison) {
         Connection conn = null;
+
         try {
             conn = DBConnection.getConnection();
             conn.setAutoCommit(false);
+
 
             // 1. Création de la commande principale avec le total calculé
             String sqlCommande = "INSERT INTO Commande(id_utilisateur, date_commande, total_commande) VALUES(?, NOW(), ?)";
