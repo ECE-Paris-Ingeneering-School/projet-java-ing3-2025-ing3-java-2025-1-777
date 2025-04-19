@@ -44,6 +44,11 @@ public class PanierView extends JFrame {
         JButton checkoutButton = new JButton("Valider la commande");
         checkoutButton.addActionListener(e -> new CheckoutFrame(cartController).setVisible(true));
         footerPanel.add(checkoutButton);
+        checkoutButton.setFocusPainted(false);
+        checkoutButton.setBackground(Color.WHITE);
+        checkoutButton.setForeground(new Color(150, 100, 80 ));
+        checkoutButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        checkoutButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         add(new JScrollPane(itemsPanel), BorderLayout.CENTER);
         add(footerPanel, BorderLayout.SOUTH);
