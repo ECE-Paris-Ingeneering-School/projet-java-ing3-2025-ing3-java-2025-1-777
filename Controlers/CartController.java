@@ -12,6 +12,12 @@ public class CartController {
         this.panier = new Panier(userId);
     }
 
+    // singleton par défaut
+    private static final CartController instance = new CartController(0);
+    public static CartController getInstance() {
+               return instance;
+    }
+
     public boolean ajouterAuPanier(Article article, int quantite) {
         if (article == null || quantite <= 0) return false;
 
