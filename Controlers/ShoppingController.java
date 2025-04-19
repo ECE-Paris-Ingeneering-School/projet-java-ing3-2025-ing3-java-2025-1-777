@@ -7,6 +7,11 @@ import DAO.UtilisateurDAOImpl;
 import model.Article;
 import model.Utilisateur;
 import java.util.List;
+import util.DiscountApplier;
+import util.BulkDiscountCalculator;
+import model.Discount;
+import DAO.DiscountDAO;
+import DAO.DiscountDAOImpl;
 
 /**
  * Contrôleur principal de l’application Shopping.
@@ -18,10 +23,12 @@ public class ShoppingController {
     private static CartController cartController;
     private static ShoppingController instance;
     private int currentUserId;
+    private DiscountDAO discountDAO;
 
     public ShoppingController() {
         this.utilisateurDAO = new UtilisateurDAOImpl();
         this.articleDAO = new ArticleDAOImpl();
+        this.discountDAO = new DiscountDAOImpl(); // Initialisation ici
     }
 
     public CartController getCartController() {
@@ -46,18 +53,18 @@ public class ShoppingController {
         return articleDAO.findAll();
     }
 
-    public double calculerPrixArticle(Article article, int quantite) {
-        double prixTotal = 0.0;
-        int quantiteBulk = article.getQuantiteBulk();
-        if (quantite >= quantiteBulk) {
-            int nbBulk = quantite / quantiteBulk;
-            int reste = quantite % quantiteBulk;
-            prixTotal = nbBulk * article.getPrixBulk() + reste * article.getPrixUnitaire();
-        } else {
-            prixTotal = quantite * article.getPrixUnitaire();
-        }
-        return prixTotal;
-    }
+//    public double calculerPrixArticle(Article article, int quantite) {
+//        double prixTotal = 0.0;
+//        int quantiteBulk = article.getQuantiteBulk();
+//        if (quantite >= quantiteBulk) {
+//            int nbBulk = quantite / quantiteBulk;
+//            int reste = quantite % quantiteBulk;
+//            prixTotal = nbBulk * article.getPrixBulk() + reste * article.getPrixUnitaire();
+//        } else {
+//            prixTotal = quantite * article.getPrixUnitaire();
+//        }
+//        return prixTotal;
+//    }
 
     public Utilisateur login(String email, String password) {
         this.currentUser = utilisateurDAO.findByEmailAndPassword(email, password);
@@ -97,4 +104,24 @@ public class ShoppingController {
         // Pas de hash pour l’instant
         return plainPassword;
     }
+
+    // Controlers/ShoppingController.java
+    public double calculerPrixArticle(Article article, int quantite) {
+        // 1. Calcul du prix bulk
+        double prix = BulkDiscountCalculator.calculateBulkPrice(
+                quantite,
+                article.getPrixUnitaire(),
+                article.getPrixBulk(),
+                article.getQuantiteBulk()
+        );
+
+        // 2. Application des discounts supplémentaires
+        Discount discount = discountDAO.getDiscountForArticle(article.getIdArticle());
+        if (discount != null) {
+            prix = DiscountApplier.applyDiscount(prix, discount);
+        }
+
+        return prix;
+    }
+
 }

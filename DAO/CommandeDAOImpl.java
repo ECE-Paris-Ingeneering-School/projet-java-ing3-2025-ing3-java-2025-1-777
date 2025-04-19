@@ -9,32 +9,29 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;  // Import ajouté ici
 
 public class CommandeDAOImpl implements CommandeDAO {
 
     @Override
     public boolean creerCommande(Panier panier, String adresseLivraison) {
-        // Vérification initiale
-        if (panier == null || panier.getArticles() == null) {
-            throw new IllegalArgumentException("Le panier est invalide");
-        }
-
         Connection conn = null;
         try {
             conn = DBConnection.getConnection();
             conn.setAutoCommit(false);
 
-            // 1. Création de la commande principale
-            String sqlCommande = "INSERT INTO Commande (...) VALUES (...)";
+            // 1. Création de la commande principale avec le total calculé
+            String sqlCommande = "INSERT INTO Commande(id_utilisateur, date_commande, total_commande) VALUES(?, NOW(), ?)";
             try (PreparedStatement psCommande = conn.prepareStatement(sqlCommande, Statement.RETURN_GENERATED_KEYS)) {
-                // ... paramètres de la commande ...
+                psCommande.setInt(1, panier.getUserId());
+                psCommande.setDouble(2, panier.calculerTotal());
 
                 if (psCommande.executeUpdate() == 0) {
                     conn.rollback();
                     return false;
                 }
 
-                // 2. Récupération ID commande
+                // 2. Récupération ID commande et création des lignes
                 try (ResultSet rs = psCommande.getGeneratedKeys()) {
                     if (!rs.next()) {
                         conn.rollback();
@@ -42,23 +39,17 @@ public class CommandeDAOImpl implements CommandeDAO {
                     }
                     int commandeId = rs.getInt(1);
 
-                    // 3. Traitement des articles - SOLUTION CORRIGÉE ICI
-                    String sqlLigne = "INSERT INTO LigneCommande (...) VALUES (...)";
+                    String sqlLigne = "INSERT INTO LigneCommande(id_commande, id_article, quantite, prix_total) VALUES(?, ?, ?, ?)";
                     try (PreparedStatement psLigne = conn.prepareStatement(sqlLigne)) {
-
-                        // ITÉRATION CORRECTE
-                        for (Article article : panier.getArticles().keySet()) {
-                            Integer quantite = panier.getArticles().get(article);
-
-                            if (article == null || quantite == null) {
-                                conn.rollback();
-                                return false;
-                            }
+                        for (Map.Entry<Article, Integer> entry : panier.getArticles().entrySet()) {
+                            Article article = entry.getKey();
+                            int quantite = entry.getValue();
+                            double prixTotal = panier.calculerPrixArticle(article, quantite);
 
                             psLigne.setInt(1, commandeId);
                             psLigne.setInt(2, article.getIdArticle());
                             psLigne.setInt(3, quantite);
-                            psLigne.setDouble(4, article.getPrixUnitaire() * quantite);
+                            psLigne.setDouble(4, prixTotal);
                             psLigne.addBatch();
 
                             if (!updateStock(conn, article.getIdArticle(), quantite)) {
@@ -66,22 +57,12 @@ public class CommandeDAOImpl implements CommandeDAO {
                                 return false;
                             }
                         }
-
-                        // Exécution du batch
-                        int[] results = psLigne.executeBatch();
-                        for (int result : results) {
-                            if (result == Statement.EXECUTE_FAILED) {
-                                conn.rollback();
-                                return false;
-                            }
-                        }
+                        psLigne.executeBatch();
                     }
                 }
             }
-
             conn.commit();
             return true;
-
         } catch (SQLException e) {
             try { if (conn != null) conn.rollback(); } catch (SQLException ex) {}
             e.printStackTrace();

@@ -23,16 +23,17 @@ public class CheckoutFrame extends JFrame {
         for (Map.Entry<Article, Integer> entry : cartController.getPanier().getArticles().entrySet()) {
             Article article = entry.getKey();
             int quantite = entry.getValue();
+            double prix = cartController.getPanier().calculerPrixArticle(article, quantite);
 
             JPanel itemPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             itemPanel.add(new JLabel(article.getNom() + " x" + quantite));
-            itemPanel.add(new JLabel(String.format("%.2f €", article.getPrixUnitaire() * quantite)));
+            itemPanel.add(new JLabel(String.format("%.2f €", prix)));
             recapPanel.add(itemPanel);
         }
 
         // Panel total
         JPanel totalPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        totalPanel.add(new JLabel("Total: " + String.format("%.2f €", cartController.getPanier().calculerTotal())));
+        totalPanel.add(new JLabel("Total: " + String.format("%.2f €", cartController.getTotalAvecRemises())));
 
         // Panel formulaire
         JPanel formPanel = new JPanel(new GridLayout(4, 2, 5, 5));

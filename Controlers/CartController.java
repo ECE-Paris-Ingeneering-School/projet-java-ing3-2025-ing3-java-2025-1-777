@@ -1,15 +1,19 @@
 package Controlers;
 
+import DAO.DiscountDAO;
+import DAO.DiscountDAOImpl;
 import model.Article;
 import model.Panier;
 
 public class CartController {
     private Panier panier;
     private int userId;
+    private DiscountDAO discountDAO;
 
     public CartController(int userId) {
         this.userId = userId;
-        this.panier = new Panier(userId);
+        this.panier = new Panier(userId, new DiscountDAOImpl());
+        this.discountDAO = new DiscountDAOImpl();
     }
 
     // singleton par défaut
@@ -19,9 +23,10 @@ public class CartController {
     }
 
     public boolean ajouterAuPanier(Article article, int quantite) {
-        if (article == null || quantite <= 0) return false;
-
-        panier.getArticles().merge(article, quantite, Integer::sum);
+        if (article == null || quantite <= 0 || article.getStock() < quantite) {
+            return false;
+        }
+        panier.ajouterArticle(article, quantite);
         return true;
     }
 
@@ -37,4 +42,11 @@ public class CartController {
     public void viderPanier() {
         panier.getArticles().clear();
     }
+
+    public double getTotalAvecRemises() {
+        return panier.calculerTotal();
+    }
 }
+
+
+
