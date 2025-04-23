@@ -3,141 +3,168 @@ package DAO;
 import model.Commande;
 import model.LigneCommande;
 import model.Panier;
-import model.Article;
-import util.DBConnection;
+import Utils.DBConnection;
+
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;  // Import ajouté ici
 
 public class CommandeDAOImpl implements CommandeDAO {
 
     @Override
     public boolean creerCommande(Panier panier, String adresseLivraison) {
-        Connection conn = null;
+        if (panier == null || panier.getArticles() == null) {
+            throw new IllegalArgumentException("Le panier est invalide");
+        }
+        String sqlCommande = """
+            INSERT INTO Commande
+              (id_utilisateur, date_commande, date_livraison, total_commande, adresse_livraison, status)
+            VALUES (?, NOW(), DATE_ADD(NOW(), INTERVAL 15 DAY), ?, ?, 'EN_COURS')
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sqlCommande, Statement.RETURN_GENERATED_KEYS)) {
 
-        try {
-            conn = DBConnection.getConnection();
             conn.setAutoCommit(false);
 
+            ps.setInt(1, panier.getUserId());
+            //  TTC (HT + 20% TVA)
+            ps.setDouble(2, panier.calculerTotalTTC());
+            ps.setString(3, adresseLivraison);
 
-            // 1. Création de la commande principale avec le total calculé
-            String sqlCommande = "INSERT INTO Commande(id_utilisateur, date_commande, total_commande) VALUES(?, NOW(), ?)";
-            try (PreparedStatement psCommande = conn.prepareStatement(sqlCommande, Statement.RETURN_GENERATED_KEYS)) {
-                psCommande.setInt(1, panier.getUserId());
-                psCommande.setDouble(2, panier.calculerTotal());
+            if (ps.executeUpdate() == 0) {
+                conn.rollback();
+                return false;
+            }
 
-                if (psCommande.executeUpdate() == 0) {
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (!rs.next()) {
                     conn.rollback();
                     return false;
                 }
+                int cmdId = rs.getInt(1);
+                LigneCommandeDAO ligneDAO = new LigneCommandeDAOImpl();
 
-                // 2. Récupération ID commande et création des lignes
-                try (ResultSet rs = psCommande.getGeneratedKeys()) {
-                    if (!rs.next()) {
+                // Insertion des lignes de commande et mise à jour du stock
+                for (var e : panier.getArticles().entrySet()) {
+                    int artId = e.getKey().getIdArticle();
+                    int qty   = e.getValue();
+                    double prixLigne = e.getKey().getPrixUnitaire() * qty;
+
+                    LigneCommande ligne = new LigneCommande();
+                    ligne.setIdCommande(cmdId);
+                    ligne.setIdArticle(artId);
+                    ligne.setQuantite(qty);
+                    ligne.setPrixTotal(prixLigne);
+
+                    if (!ligneDAO.insert(ligne)) {
                         conn.rollback();
                         return false;
                     }
-                    int commandeId = rs.getInt(1);
-
-                    String sqlLigne = "INSERT INTO LigneCommande(id_commande, id_article, quantite, prix_total) VALUES(?, ?, ?, ?)";
-                    try (PreparedStatement psLigne = conn.prepareStatement(sqlLigne)) {
-                        for (Map.Entry<Article, Integer> entry : panier.getArticles().entrySet()) {
-                            Article article = entry.getKey();
-                            int quantite = entry.getValue();
-                            double prixTotal = panier.calculerPrixArticle(article, quantite);
-
-                            psLigne.setInt(1, commandeId);
-                            psLigne.setInt(2, article.getIdArticle());
-                            psLigne.setInt(3, quantite);
-                            psLigne.setDouble(4, prixTotal);
-                            psLigne.addBatch();
-
-                            if (!updateStock(conn, article.getIdArticle(), quantite)) {
-                                conn.rollback();
-                                return false;
-                            }
-                        }
-                        psLigne.executeBatch();
+                    if (!updateStock(conn, artId, qty)) {
+                        conn.rollback();
+                        return false;
                     }
                 }
             }
+
             conn.commit();
             return true;
-        } catch (SQLException e) {
-            try { if (conn != null) conn.rollback(); } catch (SQLException ex) {}
-            e.printStackTrace();
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
             return false;
-        } finally {
-            try { if (conn != null) conn.close(); } catch (SQLException e) {}
         }
     }
+
     private boolean updateStock(Connection conn, int articleId, int quantite) throws SQLException {
-        String sql = "UPDATE Article SET stock = stock - ? WHERE id_article = ? AND stock >= ?";
+        String sql = """
+            UPDATE Article
+               SET stock = stock - ?
+             WHERE id_article = ?
+               AND stock >= ?
+            """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, quantite);
             ps.setInt(2, articleId);
-            ps.setInt(3, quantite); // Vérifie que le stock est suffisant
-
+            ps.setInt(3, quantite);
             return ps.executeUpdate() == 1;
         }
     }
 
     @Override
-    public Commande findById(int id) {
-        Commande commande = null;
-        String sql = "SELECT * FROM Commande WHERE id_commande = ?";
-
+    public boolean annulerCommande(int commandeId) {
+        String sql = "UPDATE Commande SET status='ANNULEE' WHERE id_commande = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                commande = new Commande();
-                commande.setIdCommande(rs.getInt("id_commande"));
-
-                // Utilisation directe de java.sql.Timestamp
-                commande.setDateCommande(rs.getTimestamp("date_commande"));
-
-                commande.setIdUtilisateur(rs.getInt("id_utilisateur"));
-                commande.setTotalCommande(rs.getDouble("total_commande"));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+            ps.setInt(1, commandeId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
         }
-        return commande;
+    }
+
+    @Override
+    public Commande findById(int id) {
+        Commande cmd = null;
+        String sql = """
+            SELECT id_commande, id_utilisateur,
+                   date_commande, date_livraison,
+                   adresse_livraison, total_commande, status
+              FROM Commande
+             WHERE id_commande = ?
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    cmd = new Commande();
+                    cmd.setIdCommande(rs.getInt("id_commande"));
+                    cmd.setIdUtilisateur(rs.getInt("id_utilisateur"));
+                    cmd.setDateCommande(rs.getTimestamp("date_commande"));
+                    cmd.setDateLivraison(rs.getTimestamp("date_livraison"));
+                    cmd.setAdresseLivraison(rs.getString("adresse_livraison"));
+                    cmd.setTotalCommande(rs.getDouble("total_commande"));
+                    cmd.setStatus(rs.getString("status"));
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return cmd;
     }
 
     @Override
     public List<Commande> findByUser(int userId) {
-        List<Commande> commandes = new ArrayList<Commande>();
-        String sql = "SELECT * FROM Commande WHERE id_utilisateur = ? ORDER BY date_commande DESC";
-
+        List<Commande> list = new ArrayList<>();
+        String sql = """
+            SELECT id_commande, id_utilisateur,
+                   date_commande, date_livraison,
+                   adresse_livraison, total_commande, status
+              FROM Commande
+             WHERE id_utilisateur = ?
+          ORDER BY date_commande DESC
+            """;
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, userId);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                Commande commande = new Commande();
-                commande.setIdCommande(rs.getInt("id_commande"));
-                commande.setIdUtilisateur(rs.getInt("id_utilisateur"));
-
-                // Utilisation directe de java.sql.Timestamp
-                commande.setDateCommande(rs.getTimestamp("date_commande"));
-
-                commande.setTotalCommande(rs.getDouble("total_commande"));
-                commandes.add(commande);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Commande cmd = new Commande();
+                    cmd.setIdCommande(rs.getInt("id_commande"));
+                    cmd.setIdUtilisateur(rs.getInt("id_utilisateur"));
+                    cmd.setDateCommande(rs.getTimestamp("date_commande"));
+                    cmd.setDateLivraison(rs.getTimestamp("date_livraison"));
+                    cmd.setAdresseLivraison(rs.getString("adresse_livraison"));
+                    cmd.setTotalCommande(rs.getDouble("total_commande"));
+                    cmd.setStatus(rs.getString("status"));
+                    list.add(cmd);
+                }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
-        return commandes;
+        return list;
     }
-
-    // ... autres méthodes ...
 }
