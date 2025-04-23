@@ -3,9 +3,9 @@ import java.util.List;
 
 
 /**
- * Interface générique pour les opérations DAO.
- * @param <T> l'entité à manipuler
+ * Interface générique pour les opérations DAO
  */
+
 public interface GenericDAO<T> {
     T findById(int id);
     List<T> findAll();
