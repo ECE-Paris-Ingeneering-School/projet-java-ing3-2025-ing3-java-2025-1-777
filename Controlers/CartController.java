@@ -1,86 +1,81 @@
 package Controlers;
 
-// Importation des classes nécessaires pour gérer les remises et les articles
-import DAO.DiscountDAO;
-import DAO.DiscountDAOImpl;
+import DAO.CartItemDAO;
+import DAO.CartItemDAOImpl;
 import model.Article;
 import model.Panier;
-import java.util.Map;  // Import ajouté ici, nécessaire pour gérer les entrées de panier
+
+import java.util.Map;
 
 public class CartController {
-    // Déclaration des variables membres
-    private Panier panier; // Instance de la classe Panier, représentant le panier de l'utilisateur
-    private int userId; // Identifiant de l'utilisateur associé au panier
-    private DiscountDAO discountDAO; // Interface pour l'accès aux données de remises
+    private static final double TVA_RATE = 0.20;
 
-    // Constructeur de CartController
+    private final Panier panier;
+    private final CartItemDAO cartItemDAO = new CartItemDAOImpl();
+
     public CartController(int userId) {
-        // Vérifie si l'ID de l'utilisateur est valide
-        if (userId <= 0) {
-            // Si l'ID est invalide, lance une exception
-            throw new IllegalArgumentException("ID utilisateur invalide: " + userId);
-        }
-        this.userId = userId; // Assigne l'ID utilisateur à la variable membre
-        this.discountDAO = new DiscountDAOImpl(); // Crée une instance de DiscountDAOImpl pour gérer les remises
-        this.panier = new Panier(userId, discountDAO); // Crée un panier pour l'utilisateur avec l'ID et le DiscountDAO
-        // Message de débogage pour vérifier la création du CartController
-        System.out.println("Nouveau CartController pour userID: " + userId);
+        this.panier = new Panier(userId);
+        cartItemDAO.findByUser(userId)
+                .forEach((article, qty) -> panier.ajouterArticle(article, qty));
     }
 
-    // Méthode pour ajouter un article au panier
-    public boolean ajouterAuPanier(Article article, int quantite) {
-        // Vérifie si l'article est valide et si la quantité demandée est disponible en stock
-        if (article == null || quantite <= 0 || article.getStock() < quantite) {
-            return false; // Si l'article est invalide ou si la quantité est insuffisante, retourne false
-        }
-        panier.ajouterArticle(article, quantite); // Si tout est valide, ajoute l'article au panier
-        return true; // Retourne true pour indiquer que l'ajout a réussi
+   
+    public boolean ajouterAuPanier(Article a, int q) {
+        if (a == null || q <= 0) return false;
+        panier.ajouterArticle(a, q);
+        return cartItemDAO.saveOrUpdate(
+                panier.getUserId(),
+                a.getIdArticle(),
+                panier.getArticles().get(a)
+        );
     }
 
-    // Méthode pour obtenir le panier actuel
-    public Panier getPanier() {
-        return panier; // Retourne l'objet Panier
+    
+    public void supprimerArticle(Article a) {
+        panier.supprimerArticle(a);
+        cartItemDAO.delete(panier.getUserId(), a.getIdArticle());
     }
 
-    // Méthode pour supprimer un article du panier
-    public void supprimerArticle(Article article) {
-        panier.supprimerArticle(article); // Appelle la méthode pour supprimer l'article du panier
-    }
-
-    // Méthode pour vider le panier
+    
     public void viderPanier() {
-        panier.getArticles().clear(); // Efface tous les articles dans le panier
+        panier.getArticles().clear();
+        cartItemDAO.clear(panier.getUserId());
     }
 
-    // Méthode pour obtenir le total avec remises appliquées
-    public double getTotalAvecRemises() {
-        return panier.calculerTotal(); // Calcule le total des articles dans le panier en appliquant les remises
+   
+    public Panier getPanier() {
+        return panier;
     }
 
-    // Méthode pour vérifier si le stock est disponible pour tous les articles du panier
-    public boolean isStockAvailable() {
-        // Parcourt tous les articles du panier et vérifie si la quantité demandée est disponible
+    //calcul du total
+    
+    public double calculerTotalHT() {
+        double total = 0;
         for (Map.Entry<Article, Integer> entry : panier.getArticles().entrySet()) {
-            // Si le stock d'un article est insuffisant, retourne false
-            if (entry.getKey().getStock() < entry.getValue()) {
-                return false;
+            Article art = entry.getKey();
+            int qty = entry.getValue();
+
+            int bulkQty = art.getQuantiteBulk();
+            double unit = art.getPrixUnitaire();
+            double bulkPrice= art.getPrixBulk();
+
+            if (bulkQty > 0 && qty >= bulkQty) {
+                int groups = qty / bulkQty;
+                int remainder = qty % bulkQty;
+                total += groups * bulkPrice + remainder * unit;
+            } else {
+                total += qty * unit;
             }
         }
-        return true; // Si tous les articles ont suffisamment de stock, retourne true
+        return total;
     }
 
-    // Méthode pour obtenir un résumé de la commande sous forme de texte
-    public String getOrderSummary() {
-        StringBuilder summary = new StringBuilder(); // Utilise StringBuilder pour concaténer efficacement les chaînes de caractères
-        // Parcourt chaque article du panier et ajoute son nom et sa quantité au résumé
-        for (Map.Entry<Article, Integer> entry : panier.getArticles().entrySet()) {
-            summary.append(entry.getKey().getNom()) // Nom de l'article
-                    .append(" x ")
-                    .append(entry.getValue()) // Quantité de l'article
-                    .append("\n"); // Ajoute un saut de ligne après chaque article
-        }
-        summary.append("\nTotal: ")
-                .append(String.format("%.2f €", panier.calculerTotal())); // Ajoute le total avec deux décimales
-        return summary.toString(); // Retourne le résumé sous forme de chaîne de caractères
+    
+    public double calculerTVA() {
+        return calculerTotalHT() * TVA_RATE;
+    }
+
+    public double calculerTotalTTC() {
+        return calculerTotalHT() + calculerTVA();
     }
 }
