@@ -32,7 +32,7 @@ public class SignUpFrame extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-        getContentPane().setBackground(Color.WHITE); // Fond blanc du frame
+        getContentPane().setBackground(Color.WHITE);
 
         // Header
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
@@ -75,7 +75,7 @@ public class SignUpFrame extends JFrame {
         signUpButton.setForeground(new Color(150, 100, 80));
         signUpButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         signUpButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        formPanel.add(new JLabel()); // espace
+        formPanel.add(new JLabel());
         formPanel.add(signUpButton);
 
         add(formPanel, BorderLayout.CENTER);
