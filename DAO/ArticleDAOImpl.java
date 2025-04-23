@@ -1,14 +1,12 @@
 package DAO;
 
+import Utils.DBConnection;
 import model.Article;
-import util.DBConnection;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Implémentation de l’interface ArticleDAO utilisant JDBC.
- */
 public class ArticleDAOImpl implements ArticleDAO {
 
     @Override
@@ -17,17 +15,20 @@ public class ArticleDAOImpl implements ArticleDAO {
         String sql = "SELECT * FROM Article WHERE id_article = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                article = new Article();
-                article.setIdArticle(rs.getInt("id_article"));
-                article.setNom(rs.getString("nom"));
-                article.setDescription(rs.getString("description"));
-                article.setPrixUnitaire(rs.getDouble("prix_unitaire"));
-                article.setPrixBulk(rs.getDouble("prix_bulk"));
-                article.setQuantiteBulk(rs.getInt("quantite_bulk"));
-                article.setStock(rs.getInt("stock"));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    article = new Article();
+                    article.setIdArticle(rs.getInt("id_article"));
+                    article.setNom(rs.getString("nom"));
+                    article.setDescription(rs.getString("description"));
+                    article.setPrixUnitaire(rs.getDouble("prix_unitaire"));
+                    article.setPrixBulk(rs.getDouble("prix_bulk"));
+                    article.setQuantiteBulk(rs.getInt("quantite_bulk"));
+                    article.setStock(rs.getInt("stock"));
+                    article.setIdMarque(rs.getInt("id_marque"));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -42,16 +43,18 @@ public class ArticleDAOImpl implements ArticleDAO {
         try (Connection conn = DBConnection.getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
+
             while (rs.next()) {
-                Article article = new Article();
-                article.setIdArticle(rs.getInt("id_article"));
-                article.setNom(rs.getString("nom"));
-                article.setDescription(rs.getString("description"));
-                article.setPrixUnitaire(rs.getDouble("prix_unitaire"));
-                article.setPrixBulk(rs.getDouble("prix_bulk"));
-                article.setQuantiteBulk(rs.getInt("quantite_bulk"));
-                article.setStock(rs.getInt("stock"));
-                articles.add(article);
+                Article a = new Article();
+                a.setIdArticle(rs.getInt("id_article"));
+                a.setNom(rs.getString("nom"));
+                a.setDescription(rs.getString("description"));
+                a.setPrixUnitaire(rs.getDouble("prix_unitaire"));
+                a.setPrixBulk(rs.getDouble("prix_bulk"));
+                a.setQuantiteBulk(rs.getInt("quantite_bulk"));
+                a.setStock(rs.getInt("stock"));
+                a.setIdMarque(rs.getInt("id_marque"));
+                articles.add(a);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -61,17 +64,29 @@ public class ArticleDAOImpl implements ArticleDAO {
 
     @Override
     public boolean insert(Article article) {
-        String sql = "INSERT INTO Article(nom, description, prix_unitaire, prix_bulk, quantite_bulk, stock) VALUES(?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Article "
+                + "(nom, description, prix_unitaire, prix_bulk, quantite_bulk, stock, id_marque) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
             ps.setString(1, article.getNom());
             ps.setString(2, article.getDescription());
             ps.setDouble(3, article.getPrixUnitaire());
             ps.setDouble(4, article.getPrixBulk());
             ps.setInt(5, article.getQuantiteBulk());
             ps.setInt(6, article.getStock());
+            ps.setInt(7, article.getIdMarque());
+
             int rows = ps.executeUpdate();
-            return rows > 0;
+            if (rows > 0) {
+                try (ResultSet keys = ps.getGeneratedKeys()) {
+                    if (keys.next()) {
+                        article.setIdArticle(keys.getInt(1));
+                    }
+                }
+                return true;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -80,18 +95,20 @@ public class ArticleDAOImpl implements ArticleDAO {
 
     @Override
     public boolean update(Article article) {
-        String sql = "UPDATE Article SET nom=?, description=?, prix_unitaire=?, prix_bulk=?, quantite_bulk=?, stock=? WHERE id_article=?";
+        String sql = "UPDATE Article SET " + "nom = ?, description = ?, prix_unitaire = ?, prix_bulk = ?, "+ "quantite_bulk = ?, stock = ?, id_marque = ? " + "WHERE id_article = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setString(1, article.getNom());
             ps.setString(2, article.getDescription());
             ps.setDouble(3, article.getPrixUnitaire());
             ps.setDouble(4, article.getPrixBulk());
             ps.setInt(5, article.getQuantiteBulk());
             ps.setInt(6, article.getStock());
-            ps.setInt(7, article.getIdArticle());
-            int rows = ps.executeUpdate();
-            return rows > 0;
+            ps.setInt(7, article.getIdMarque());
+            ps.setInt(8, article.getIdArticle());
+
+            return ps.executeUpdate() == 1;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -103,9 +120,9 @@ public class ArticleDAOImpl implements ArticleDAO {
         String sql = "DELETE FROM Article WHERE id_article = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, id);
-            int rows = ps.executeUpdate();
-            return rows > 0;
+            return ps.executeUpdate() == 1;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -115,21 +132,24 @@ public class ArticleDAOImpl implements ArticleDAO {
     @Override
     public List<Article> findByMarque(int idMarque) {
         List<Article> articles = new ArrayList<>();
-        String sql = "SELECT a.* FROM Article a JOIN Article_Marque am ON a.id_article = am.id_article WHERE am.id_marque = ?";
+        String sql = "SELECT * FROM Article WHERE id_marque = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, idMarque);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Article article = new Article();
-                article.setIdArticle(rs.getInt("id_article"));
-                article.setNom(rs.getString("nom"));
-                article.setDescription(rs.getString("description"));
-                article.setPrixUnitaire(rs.getDouble("prix_unitaire"));
-                article.setPrixBulk(rs.getDouble("prix_bulk"));
-                article.setQuantiteBulk(rs.getInt("quantite_bulk"));
-                article.setStock(rs.getInt("stock"));
-                articles.add(article);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Article a = new Article();
+                    a.setIdArticle(rs.getInt("id_article"));
+                    a.setNom(rs.getString("nom"));
+                    a.setDescription(rs.getString("description"));
+                    a.setPrixUnitaire(rs.getDouble("prix_unitaire"));
+                    a.setPrixBulk(rs.getDouble("prix_bulk"));
+                    a.setQuantiteBulk(rs.getInt("quantite_bulk"));
+                    a.setStock(rs.getInt("stock"));
+                    a.setIdMarque(rs.getInt("id_marque"));
+                    articles.add(a);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -138,7 +158,13 @@ public class ArticleDAOImpl implements ArticleDAO {
     }
 
     @Override
-    public List<Article> getAllArticles() {
+    public List<Article> findByCategory(String category) {
         return List.of();
+    }
+
+    @Override
+    public List<Article> getAllArticles() {
+
+        return findAll();
     }
 }
