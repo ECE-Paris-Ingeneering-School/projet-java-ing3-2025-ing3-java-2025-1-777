@@ -4,7 +4,9 @@ import Controlers.ShoppingController;
 
 import java.util.HashMap;
 import java.util.Map;
-
+/**
+ * Classe représentant le panier.
+ */
 public class Panier {
     private final int userId;
     private final Map<Article, Integer> articles = new HashMap<>();
