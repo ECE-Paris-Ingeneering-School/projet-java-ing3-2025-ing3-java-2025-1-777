@@ -1,147 +1,190 @@
 package view;
 
-import Controlers.ShoppingController;
 import Controlers.CartController;
+import Controlers.ProductController;
+import Controlers.ShoppingController;
+import DAO.DiscountDAOImpl;
 import model.Article;
+import model.Discount;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.net.URL;
 
+/**
+ * Fenêtre de détail du produit.
+ */
 public class ProductDetailFrame extends JFrame {
-    private Article product;
-    private ShoppingController controller;
-    private CartController cartController;
+    private final Article product;
+    private final ProductController productController;
+    private final CartController cartController;
 
-    public ProductDetailFrame(Article product, ShoppingController controller) {
-        if (product == null || controller == null) {
-            throw new IllegalArgumentException("Arguments ne peuvent pas être null");
-        }
+    public ProductDetailFrame(Article product, ProductController productController, CartController cartController) {
         this.product = product;
-        this.controller = controller;
-        this.cartController = controller.getCartController();
-
-        if (this.cartController == null) {
-            throw new IllegalStateException("CartController non disponible");
-        }
-
+        this.productController = productController;
+        this.cartController = cartController;
         initUI();
     }
 
     private void initUI() {
-        setTitle(product.getNom() + " - Détails");
+        setTitle(product.getNom() + " – Détails");
         setSize(800, 600);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         getContentPane().setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+        setLayout(new BorderLayout());
 
-        // Grande image en haut
+        // Barre de navigation
+        add(new NavigationBarPanel(cartController), BorderLayout.NORTH);
+
+       
         JLabel imageLabel = new JLabel();
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        ImageIcon imageIcon = loadProductImage(product.getImagePath());
-        if (imageIcon != null) {
-            int newWidth = 700;
-            int newHeight = (int)(((double) imageIcon.getIconHeight() / imageIcon.getIconWidth()) * newWidth);
-            Image scaledImage = imageIcon.getImage()
-                    .getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
-            imageLabel.setIcon(new ImageIcon(scaledImage));
+        ImageIcon rawIcon = loadProductImage(product.getImagePath());
+        if (rawIcon != null) {
+            int heroWidth = getWidth();
+            int heroHeight = (int)((double) rawIcon.getIconHeight() / rawIcon.getIconWidth() * heroWidth);
+            Image scaled = rawIcon.getImage().getScaledInstance(heroWidth, heroHeight, Image.SCALE_SMOOTH);
+            imageLabel.setIcon(new ImageIcon(scaled));
         } else {
             imageLabel.setText("Aucune image disponible");
-            imageLabel.setForeground(NavigationBarPanel.TEXT_COLOR);
+            imageLabel.setForeground(Color.DARK_GRAY);
         }
         add(imageLabel, BorderLayout.NORTH);
 
-        // Détails du produit
-        JPanel detailsPanel = new JPanel();
-        detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
-        detailsPanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
-        detailsPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+    
+        JPanel details = new JPanel();
+        details.setLayout(new BoxLayout(details, BoxLayout.Y_AXIS));
+        details.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+        details.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JLabel nameLabel = new JLabel(product.getNom());
+        // Nom
+        JLabel nameLabel = new JLabel(product.getNom(), SwingConstants.CENTER);
+        nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         nameLabel.setFont(new Font("Serif", Font.BOLD, 28));
-        nameLabel.setForeground(NavigationBarPanel.TEXT_COLOR);
+        nameLabel.setForeground(Color.BLACK);
+        details.add(nameLabel);
+        details.add(Box.createVerticalStrut(10));
 
-        JLabel priceLabel = new JLabel(String.format("%.2f €", product.getPrixUnitaire()));
-        priceLabel.setFont(new Font("SansSerif", Font.PLAIN, 24));
-        priceLabel.setForeground(NavigationBarPanel.MENU_HOVER_COLOR);
+        // Prix unitaire
+        JLabel unitPrice = new JLabel(
+                String.format("Prix unitaire : %.2f €", product.getPrixUnitaire()),
+                SwingConstants.CENTER
+        );
+        unitPrice.setAlignmentX(Component.CENTER_ALIGNMENT);
+        unitPrice.setFont(new Font("SansSerif", Font.PLAIN, 20));
+        details.add(unitPrice);
+        details.add(Box.createVerticalStrut(10));
 
-        JTextArea descArea = new JTextArea(product.getDescription());
-        descArea.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        descArea.setForeground(NavigationBarPanel.TEXT_COLOR);
-        descArea.setLineWrap(true);
-        descArea.setWrapStyleWord(true);
-        descArea.setEditable(false);
-        descArea.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+        // Prix en vrac 
+        int bulkQty = product.getQuantiteBulk();
+        double bulkPrice = product.getPrixBulk();
+        double perUnitBulk = bulkPrice / bulkQty;
+        JLabel bulkLabel = new JLabel(
+                String.format("Prix en vrac (%d pcs) : %.2f € (soit %.2f €/pc)", bulkQty, bulkPrice, perUnitBulk),
+                SwingConstants.CENTER
+        );
+        bulkLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        bulkLabel.setFont(new Font("SansSerif", Font.PLAIN, 18));
+        bulkLabel.setForeground(NavigationBarPanel.TEXT_COLOR);
+        details.add(bulkLabel);
+        details.add(Box.createVerticalStrut(10));
 
-        JScrollPane descScroll = new JScrollPane(descArea);
-        descScroll.setBorder(null);
-        descScroll.getViewport().setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+        // Stock disponible
+        JLabel stockLabel = new JLabel(
+                String.format("Stock disponible : %d pièce(s)", product.getStock()),
+                SwingConstants.CENTER
+        );
+        stockLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        stockLabel.setFont(new Font("SansSerif", Font.PLAIN, 18));
+        stockLabel.setForeground(NavigationBarPanel.TEXT_COLOR);
+        details.add(stockLabel);
+        details.add(Box.createVerticalStrut(10));
 
-        detailsPanel.add(nameLabel);
-        detailsPanel.add(Box.createVerticalStrut(10));
-        detailsPanel.add(priceLabel);
-        detailsPanel.add(Box.createVerticalStrut(20));
-        detailsPanel.add(descScroll);
+        // Promotion éventuelle
+        Discount promo = new DiscountDAOImpl().findByArticle(product.getIdArticle());
+        if (promo != null) {
+            double taux = promo.getTaux();
+            double prixReduit = product.getPrixUnitaire() * (1 - taux/100);
+            JLabel promoLabel = new JLabel(
+                    String.format("Promotion : -%.0f%% → %.2f €", taux, prixReduit),
+                    SwingConstants.CENTER
+            );
+            promoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            promoLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
+            promoLabel.setForeground(new Color(200, 0, 0));
+            details.add(promoLabel);
+            details.add(Box.createVerticalStrut(10));
+        }
 
-        add(detailsPanel, BorderLayout.CENTER);
+        // Description
+        JTextArea desc = new JTextArea(product.getDescription());
+        desc.setLineWrap(true);
+        desc.setWrapStyleWord(true);
+        desc.setEditable(false);
+        desc.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+        desc.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        JScrollPane scrollDesc = new JScrollPane(desc);
+        scrollDesc.setBorder(null);
+        scrollDesc.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
+        details.add(scrollDesc);
 
-        // Footer : bouton Ajouter au panier + Retour
-        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        footerPanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+        add(details, BorderLayout.CENTER);
 
-        JButton addToCartBtn = new JButton("Ajouter au panier");
-        addToCartBtn.setFocusPainted(false);
-        addToCartBtn.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
-        addToCartBtn.setForeground(NavigationBarPanel.MENU_HOVER_COLOR);
-        addToCartBtn.setForeground(NavigationBarPanel.TEXT_COLOR);
-        addToCartBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        addToCartBtn.addActionListener(e -> {
-            if (cartController.ajouterAuPanier(product, 1)) {
-                JOptionPane.showMessageDialog(this,
-                        "« " + product.getNom() + " » a été ajouté au panier.",
-                        "Confirmation",
-                        JOptionPane.INFORMATION_MESSAGE);
+        // Footer
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        footer.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+
+        // Quantité
+        JSpinner qtySpinner = new JSpinner(
+                new SpinnerNumberModel(1, 1, product.getStock(), 1)
+        );
+        footer.add(new JLabel("Quantité :"));
+        footer.add(qtySpinner);
+
+        // Ajouter au panier
+        JButton addToCart = new JButton("Ajouter au panier");
+        addToCart.addActionListener((ActionEvent e) -> {
+            int qty = (Integer) qtySpinner.getValue();
+            boolean ok = cartController.ajouterAuPanier(product, qty);
+            if (ok) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        qty + " × " + product.getNom() + " ajouté(s) au panier.",
+                        "Ajouté", JOptionPane.INFORMATION_MESSAGE
+                );
             } else {
-                JOptionPane.showMessageDialog(this,
-                        "Erreur lors de l'ajout au panier",
-                        "Erreur",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Impossible d'ajouter le produit.", "Erreur",
+                        JOptionPane.ERROR_MESSAGE
+                );
             }
         });
-        footerPanel.add(addToCartBtn);
+        footer.add(addToCart);
 
-        JButton backButton = new JButton("Retour");
-        backButton.setFocusPainted(false);
-        backButton.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
-        backButton.setForeground(NavigationBarPanel.MENU_HOVER_COLOR);
-        backButton.setForeground(NavigationBarPanel.TEXT_COLOR);
-        backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        backButton.addActionListener(e -> this.dispose());
-        footerPanel.add(backButton);
+        // Bouton Retour
+        JButton back = new JButton("Retour");
+        back.addActionListener(e -> dispose());
+        footer.add(back);
 
-        add(footerPanel, BorderLayout.SOUTH);
+        add(footer, BorderLayout.SOUTH);
     }
 
-    private ImageIcon loadProductImage(String imagePath) {
-        if (imagePath == null || imagePath.trim().isEmpty()) return null;
+    private ImageIcon loadProductImage(String path) {
+        if (path == null || path.isBlank()) return null;
         try {
-            BufferedImage image;
-            if (imagePath.startsWith("http")) {
-                URL url = new URL(imagePath);
-                image = ImageIO.read(url);
-            } else {
-                File file = new File(imagePath);
-                image = ImageIO.read(file);
-            }
-            return new ImageIcon(image);
+            BufferedImage img = path.startsWith("http")
+                    ? ImageIO.read(new URL(path))
+                    : ImageIO.read(new File(path));
+            return new ImageIcon(img);
         } catch (Exception ex) {
             ex.printStackTrace();
+            return null;
         }
-        return null;
     }
 }
-
