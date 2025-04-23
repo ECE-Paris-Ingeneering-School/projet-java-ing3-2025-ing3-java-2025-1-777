@@ -1,19 +1,14 @@
 package DAO;
 
+import Utils.DBConnection;
 import model.Utilisateur;
-import util.DBConnection;
 
 import javax.swing.*;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- * Implémentation de l’interface UtilisateurDAO
- */
 public class UtilisateurDAOImpl implements UtilisateurDAO {
-
-    private String email;
-    private String motDePasse;
-
     @Override
     public Utilisateur findById(int id) {
         Utilisateur user = null;
@@ -38,110 +33,15 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
     }
 
     @Override
-    public Utilisateur findByEmailAndPassword(String email, String password) {
-        String sql = "SELECT * FROM Utilisateur WHERE email = ? AND mot_de_passe = ?";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, email);
-            ps.setString(2, password); // À hasher en production
-
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                Utilisateur user = new Utilisateur();
-                // Remplissage COMPLET des champs
-                user.setIdUtilisateur(rs.getInt("id_utilisateur"));
-                user.setNom(rs.getString("nom"));
-                user.setPrenom(rs.getString("prenom"));
-                user.setEmail(rs.getString("email"));
-                user.setMotDePasse(rs.getString("mot_de_passe")); // Normalement pas nécessaire après login
-                user.setRole(rs.getString("role")); // Important pour les vérifications
-
-                System.out.println("Utilisateur trouvé: ID=" + user.getIdUtilisateur()); // Debug
-                return user;
-            }
-        } catch (SQLException e) {
-            System.err.println("Erreur lors de la recherche utilisateur:");
-            e.printStackTrace();
-        }
-        System.out.println("Aucun utilisateur trouvé pour: " + email); // Debug
-        return null;
-    }
-
-
-    @Override
-    public java.util.List<Utilisateur> findAll() {
-        // Implémenter si besoin
-        return null;
-    }
-
-
-    @Override
-    public boolean update(Utilisateur user) {
-        return false;
-    }
-
-    @Override
-    public boolean delete(int id) {
-        return false;
-    }
-    //modification de la méthode insert
-    @Override
-    public boolean insert(Utilisateur user) {
-        String sql = "INSERT INTO Utilisateur (nom, prenom, email, mot_de_passe, role) VALUES (?, ?, ?, ?, ?)";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-            ps.setString(1, user.getNom());
-            ps.setString(2, user.getPrenom());
-            ps.setString(3, user.getEmail());
-            ps.setString(4, user.getMotDePasse()); // Doit être déjà hashé
-            ps.setString(5, user.getRole() != null ? user.getRole() : "client");
-
-            int affectedRows = ps.executeUpdate();
-            if (affectedRows == 0) {
-                return false;
-            }
-
-            // Récupération de l'ID généré
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    user.setIdUtilisateur(rs.getInt(1));
-                }
-            }
-
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
-    public boolean emailExists(String email) {
-        String sql = "SELECT COUNT(*) FROM Utilisateur WHERE email = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, email);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    @Override
-    public Utilisateur findByEmail(String email) {
+    public Utilisateur findByEmailAndPassword(String email, String motDePasse) {
         Utilisateur user = null;
-        String sql = "SELECT * FROM Utilisateur WHERE email = ?";
+        String sql = "SELECT * FROM Utilisateur WHERE email = ? AND mot_de_passe = ?";
+        // DEBUG
+        System.out.println("[Login] Querying user with email='" + email + "' and password='" + motDePasse + "'");
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, email);
+            ps.setString(1, email.trim());
+            ps.setString(2, motDePasse); 
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 user = new Utilisateur();
@@ -151,6 +51,9 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
                 user.setEmail(rs.getString("email"));
                 user.setMotDePasse(rs.getString("mot_de_passe"));
                 user.setRole(rs.getString("role"));
+                System.out.println("[Login] Success: found user id=" + user.getIdUtilisateur());
+            } else {
+                System.out.println("[Login] Failed: no matching record");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -158,9 +61,86 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
         return user;
     }
 
+    @Override
+    public boolean emailExists(String email) {
+        return false;
+    }
 
+    @Override
+    public List<Utilisateur> findAll() {
+        List<Utilisateur> users = new ArrayList<>();
+        String sql = "SELECT * FROM Utilisateur";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
 
+            while (rs.next()) {
+                Utilisateur u = new Utilisateur();
+                u.setIdUtilisateur(rs.getInt("id_utilisateur"));
+                u.setNom(rs.getString("nom"));
+                u.setPrenom(rs.getString("prenom"));
+                u.setEmail(rs.getString("email"));
+                u.setMotDePasse(rs.getString("mot_de_passe"));
+                u.setRole(rs.getString("role"));
+                users.add(u);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
+    @Override
+    public boolean insert(Utilisateur user) {
+        String sql = "INSERT INTO Utilisateur (nom, prenom, email, mot_de_passe, role) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, user.getNom());
+            ps.setString(2, user.getPrenom());
+            ps.setString(3, user.getEmail());
+            ps.setString(4, user.getMotDePasse());
+            ps.setString(5, user.getRole());
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                ResultSet keys = ps.getGeneratedKeys();
+                if (keys.next()) user.setIdUtilisateur(keys.getInt(1));
+            }
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean update(Utilisateur user) {
+        String sql = "UPDATE Utilisateur SET nom=?, prenom=?, email=?, mot_de_passe=?, role=? WHERE id_utilisateur=?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, user.getNom());
+            ps.setString(2, user.getPrenom());
+            ps.setString(3, user.getEmail());
+            ps.setString(4, user.getMotDePasse());
+            ps.setString(5, user.getRole());
+            ps.setInt(6, user.getIdUtilisateur());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean delete(int id) {
+        String sql = "DELETE FROM Utilisateur WHERE id_utilisateur = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
-
-
-
