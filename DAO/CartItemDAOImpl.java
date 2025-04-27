@@ -1,3 +1,6 @@
+package DAO;
+
+import Utils.DBConnection;
 import model.Article;
 
 import java.sql.*;
@@ -6,6 +9,8 @@ import java.util.Map;
 
 /**
  * Implémentation JDBC de CartItemDAO.
+ * Nécessite une table SQL CartItem(user_id INT, article_id INT, quantity INT,
+ *   PRIMARY KEY(user_id,article_id))
  */
 public class CartItemDAOImpl implements CartItemDAO {
     private final ArticleDAO articleDAO = new ArticleDAOImpl();

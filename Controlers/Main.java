@@ -6,7 +6,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 
 /**
- * Classe principale pour lancer l'application.
+ * Classe principale pour lancer l'application Shopping.
  */
 public class Main {
     public static void main(String[] args) {
@@ -16,9 +16,9 @@ public class Main {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             Connection conn = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:8889/Shopping?useSSL=false&serverTimezone=UTC",
-                    "root",
-                    "root"
+                    "jdbc:mysql://localhost:3306/Shopping?useSSL=false&serverTimezone=UTC",
+                    "",
+                    ""
             );
             System.out.println("Connexion réussie !");
             conn.close();
