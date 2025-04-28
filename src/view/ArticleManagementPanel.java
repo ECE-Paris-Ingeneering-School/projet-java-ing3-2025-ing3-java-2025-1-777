@@ -11,12 +11,10 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-/**
- * Panel de gestion des articles avec boutons Ajouter, Modifier, Supprimer
- */
+/** classe de gestion des articles par l'admin */
 public class ArticleManagementPanel extends JPanel {
     private final ProductController prodCtrl = new ProductController();
-    private final MarqueDAO marqueDAO        = new MarqueDAOImpl();
+    private final MarqueDAO marqueDAO = new MarqueDAOImpl();
     private final DefaultTableModel model;
     private final JTable table;
 
@@ -24,7 +22,6 @@ public class ArticleManagementPanel extends JPanel {
         setLayout(new BorderLayout(10, 10));
         setBackground(NavigationBarPanel.BACKGROUND_COLOR);
 
-        // Table
         String[] cols = {"ID", "Nom", "Marque", "Description", "Prix Uni", "Prix Bulk", "Qty Bulk", "Stock"};
         model = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
@@ -32,7 +29,6 @@ public class ArticleManagementPanel extends JPanel {
         table = new JTable(model);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // Boutons
         JPanel btnPane = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         btnPane.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
 
@@ -46,7 +42,6 @@ public class ArticleManagementPanel extends JPanel {
 
         add(btnPane, BorderLayout.SOUTH);
 
-        // Actions
         addBtn.addActionListener(e -> {
             Frame owner = (Frame) SwingUtilities.getWindowAncestor(this);
             ArticleEditDialog dlg = new ArticleEditDialog(owner, prodCtrl, null);
@@ -75,15 +70,13 @@ public class ArticleManagementPanel extends JPanel {
                 return;
             }
             int id = (int) model.getValueAt(row, 0);
-            int choice = JOptionPane.showConfirmDialog(this,
-                    "Supprimer l'article sélectionné?", "Confirmation", JOptionPane.YES_NO_OPTION);
+            int choice = JOptionPane.showConfirmDialog(this, "Supprimer l'article sélectionné?", "Confirmation", JOptionPane.YES_NO_OPTION);
             if (choice == JOptionPane.YES_OPTION) {
                 prodCtrl.deleteArticle(id);
                 loadTable();
             }
         });
 
-        // Chargement initial
         loadTable();
     }
 

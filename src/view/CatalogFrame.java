@@ -1,4 +1,5 @@
 package view;
+
 import Controlers.CartController;
 import Controlers.ProductController;
 import Controlers.ShoppingController;
@@ -6,6 +7,8 @@ import model.Article;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+
+/** classe du catalogue des articles*/
 
 public class CatalogFrame extends JFrame {
     private final ShoppingController shop = ShoppingController.getInstance();
@@ -15,7 +18,10 @@ public class CatalogFrame extends JFrame {
     public CatalogFrame() {
         initUI();
     }
-
+/**
+ * Construit l'interface graphique
+ * Défini le titre, la dimension, la barre de navigation et la grille de produits.
+ */
     private void initUI() {
         setTitle("Loro Piana - Catalogue");
         setSize(1200, 800);
@@ -24,10 +30,8 @@ public class CatalogFrame extends JFrame {
         getContentPane().setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         setLayout(new BorderLayout());
 
-        // Barre de nav avec panier
         add(new NavigationBarPanel(cartController), BorderLayout.NORTH);
 
-        // Grille produits
         JPanel grid = new JPanel(new GridLayout(0, 3, 20, 20));
         grid.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         grid.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));

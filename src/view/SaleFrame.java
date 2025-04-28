@@ -1,4 +1,3 @@
-// src/view/SaleFrame.java
 package view;
 
 import Controlers.ProductController;
@@ -12,6 +11,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
+/** classe qui permet d'afficher les articles en solde*/
 public class SaleFrame extends JFrame {
     public SaleFrame() {
         setTitle("Articles en Soldes – Loro Piana");
@@ -20,8 +20,7 @@ public class SaleFrame extends JFrame {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        add(new NavigationBarPanel(ShoppingController.getInstance().getCartController()),
-                BorderLayout.NORTH);
+        add(new NavigationBarPanel(ShoppingController.getInstance().getCartController()), BorderLayout.NORTH);
 
         JPanel grid = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
         grid.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
@@ -32,7 +31,6 @@ public class SaleFrame extends JFrame {
         for (Article a : all) {
             Discount d = discDao.findByArticle(a.getIdArticle());
             if (d != null && d.getTaux() > 0) {
-                // on réutilise ProductCardPanel, qui affiche prix unitaire + stock
                 grid.add(new ProductCardPanel(a, prodCtrl, ShoppingController.getInstance().getCartController()));
             }
         }

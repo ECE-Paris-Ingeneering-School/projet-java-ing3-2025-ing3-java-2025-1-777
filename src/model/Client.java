@@ -1,5 +1,8 @@
 package model;
-
+/**
+ * Classe qui représente un client de la BDD
+ * permet de definir l'Idclient,le nom,le prenom,l'email, le mdp et le role
+ */
 public class Client {
     private int idClient;
     private String nom;

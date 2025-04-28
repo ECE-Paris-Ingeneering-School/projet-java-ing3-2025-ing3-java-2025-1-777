@@ -3,7 +3,7 @@ package model;
 import java.util.Objects;
 
 /**
- * Représente une ligne de panier persistée :
+ * Classe qui représente une ligne de panier persistée
  * userId, articleId, taille choisie, quantité.
  */
 public class CartItem {
@@ -11,8 +11,8 @@ public class CartItem {
     private int articleId;
     private String size;
     private int quantity;
+    private Article article;
 
-    public CartItem() {}
 
     /** Constructeur complet */
     public CartItem(int userId, int articleId, String size, int quantity) {
@@ -20,6 +20,7 @@ public class CartItem {
         this.articleId = articleId;
         this.size      = size;
         this.quantity  = quantity;
+        this.article = article;
     }
 
     public int getUserId() {
@@ -67,11 +68,9 @@ public class CartItem {
 
     @Override
     public String toString() {
-        return "CartItem{" +
-                "userId=" + userId +
-                ", articleId=" + articleId +
-                ", size='" + size + '\'' +
-                ", quantity=" + quantity +
-                '}';
+        return "CartItem{" + "userId=" + userId + ", articleId=" + articleId + ", size='" + size + '\'' + ", quantity=" + quantity + '}';
+    }
+    public Article getArticle() {
+        return this.article;
     }
 }

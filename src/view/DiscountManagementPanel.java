@@ -11,9 +11,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-/**
- * Panel de gestion des rabais
- */
+/** classe de gestion des soldes */
 public class DiscountManagementPanel extends JPanel {
     private final DiscountDAO discountDAO    = new DiscountDAOImpl();
     private final ProductController prodCtrl = new ProductController();
@@ -24,7 +22,6 @@ public class DiscountManagementPanel extends JPanel {
         setLayout(new BorderLayout(10, 10));
         setBackground(NavigationBarPanel.BACKGROUND_COLOR);
 
-        // Définition des colonnes
         String[] cols = {"ID", "Article", "Description", "Taux", "Type"};
         model = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int row, int col) {
@@ -34,7 +31,6 @@ public class DiscountManagementPanel extends JPanel {
         table = new JTable(model);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // Boutons Ajouter / Modifier / Supprimer
         JPanel btnPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnPane.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         JButton addB = new JButton("Ajouter");
@@ -45,10 +41,8 @@ public class DiscountManagementPanel extends JPanel {
         btnPane.add(delB);
         add(btnPane, BorderLayout.SOUTH);
 
-        // Chargement initial
         loadTable();
 
-        // Listeners des boutons
         addB.addActionListener(e -> {
             Frame owner = (Frame) SwingUtilities.getWindowAncestor(this);
             DiscountEditDialog dlg = new DiscountEditDialog(owner, discountDAO, prodCtrl, null);
@@ -75,16 +69,14 @@ public class DiscountManagementPanel extends JPanel {
                 return;
             }
             int id = (int) model.getValueAt(row, 0);
-            if (JOptionPane.showConfirmDialog(this,
-                    "Supprimer ce rabais ?", "Suppression", JOptionPane.YES_NO_OPTION
-            ) == JOptionPane.YES_OPTION) {
+            if (JOptionPane.showConfirmDialog(this, "Voulez-vous supprimer ce rabais?", "Suppression", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
                 discountDAO.delete(id);
                 loadTable();
             }
         });
     }
 
-    /** Recharge la table avec les données en base */
+    /** Recharge la table avec les données dans la BDD */
     private void loadTable() {
         model.setRowCount(0);
         List<Discount> list = discountDAO.findAll();

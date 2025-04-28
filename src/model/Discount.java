@@ -1,13 +1,14 @@
 package model;
 /**
  * Classe représentant une réduction applicable à un article.
+ * definit l'iddiscount, despcription, taux et type du solde et idArticle
  */
 public class Discount {
     private int idDiscount;
     private String description;
     private double taux;
-    private String type; // 'pourcentage' ou 'fixe'
-    private int idArticle; // clé étrangère vers l'article concerné
+    private String type;
+    private int idArticle;
 
     public Discount() {
     }

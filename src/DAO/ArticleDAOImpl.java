@@ -6,19 +6,13 @@ import model.Article;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
 /**
- * Implémentation de l'interface {@link ArticleDAO} pour la gestion des articles dans la base de données.
- * Cette classe permet d'effectuer des opérations CRUD (Créer, Lire, Mettre à jour, Supprimer) sur les articles.
+ * Implémentation JDBC du DAO ArticleDAO.
  */
 public class ArticleDAOImpl implements ArticleDAO {
-
-    /**
-     * Récupère un article à partir de son ID dans la base de données.
-     *
-     * @param id L'ID de l'article à récupérer.
-     * @return L'article correspondant à l'ID, ou null si l'article n'est pas trouvé.
-     */
+/**
+ * Recherche un article par son identifiant.
+ */
     @Override
     public Article findById(int id) {
         Article article = null;
@@ -38,7 +32,6 @@ public class ArticleDAOImpl implements ArticleDAO {
                     article.setQuantiteBulk(rs.getInt("quantite_bulk"));
                     article.setStock(rs.getInt("stock"));
                     article.setIdMarque(rs.getInt("id_marque"));
-                    // Récupère le chemin de l'image et le stocke dans la liste
                     String img = rs.getString("image_path");
                     if (img != null) {
                         List<String> paths = new ArrayList<>();
@@ -52,12 +45,9 @@ public class ArticleDAOImpl implements ArticleDAO {
         }
         return article;
     }
-
-    /**
-     * Récupère tous les articles de la base de données.
-     *
-     * @return Une liste de tous les articles disponibles dans la base de données.
-     */
+/**
+ * Récupère tous les articles disponibles.
+ */
     @Override
     public List<Article> findAll() {
         List<Article> articles = new ArrayList<>();
@@ -89,13 +79,9 @@ public class ArticleDAOImpl implements ArticleDAO {
         }
         return articles;
     }
-
-    /**
-     * Insère un nouvel article dans la base de données.
-     *
-     * @param article L'article à insérer dans la base de données.
-     * @return true si l'insertion a réussi, false sinon.
-     */
+/**
+ * Ajoute un nouvel article à la BDD
+ */
     @Override
     public boolean insert(Article article) {
         String sql = "INSERT INTO Article "
@@ -111,7 +97,6 @@ public class ArticleDAOImpl implements ArticleDAO {
             ps.setInt(5, article.getQuantiteBulk());
             ps.setInt(6, article.getStock());
             ps.setInt(7, article.getIdMarque());
-            // Si une image est présente, elle est ajoutée, sinon on laisse null
             if (article.getImagePath() != null) {
                 ps.setString(8, article.getImagePath());
             } else {
@@ -132,13 +117,9 @@ public class ArticleDAOImpl implements ArticleDAO {
         }
         return false;
     }
-
-    /**
-     * Met à jour un article existant dans la base de données.
-     *
-     * @param article L'article avec les nouvelles informations à mettre à jour.
-     * @return true si la mise à jour a réussi, false sinon.
-     */
+/**
+ * Met à jour un article existant dans la BDD.
+ */
     @Override
     public boolean update(Article article) {
         String sql = "UPDATE Article SET "
@@ -168,13 +149,9 @@ public class ArticleDAOImpl implements ArticleDAO {
         }
         return false;
     }
-
-    /**
-     * Supprime un article de la base de données en fonction de son ID.
-     *
-     * @param id L'ID de l'article à supprimer.
-     * @return true si la suppression a réussi, false sinon.
-     */
+/**
+ * Supprime un article par son identifiant.
+ */
     @Override
     public boolean delete(int id) {
         String sql = "DELETE FROM Article WHERE id_article = ?";
@@ -187,13 +164,9 @@ public class ArticleDAOImpl implements ArticleDAO {
         }
         return false;
     }
-
-    /**
-     * Récupère les articles en fonction de l'ID de la marque.
-     *
-     * @param idMarque L'ID de la marque des articles à récupérer.
-     * @return Une liste d'articles correspondant à la marque spécifiée.
-     */
+/**
+ * Récupère tous les articles appartenant à une marque spécifique.
+ */
     @Override
     public List<Article> findByMarque(int idMarque) {
         List<Article> articles = new ArrayList<>();
@@ -227,25 +200,14 @@ public class ArticleDAOImpl implements ArticleDAO {
         }
         return articles;
     }
-
-    /**
-     * Récupère les articles d'une catégorie spécifique.
-     * Cette méthode n'est pas encore implémentée et retourne une liste vide.
-     *
-     * @param category La catégorie des articles à récupérer.
-     * @return Une liste vide (la méthode n'est pas implémentée).
-     */
+/**
+ * Recherche les articles par leur catégorie
+ */
     @Override
     public List<Article> findByCategory(String category) {
         return List.of();
     }
 
-    /**
-     * Récupère tous les articles disponibles.
-     * Cette méthode est un alias de la méthode {@link #findAll()}.
-     *
-     * @return Une liste de tous les articles dans le catalogue.
-     */
     @Override
     public List<Article> getAllArticles() {
         return findAll();

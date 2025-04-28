@@ -10,9 +10,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-/**
- * Panel de gestion des clients
- */
+/**  classe de la gestion des clients */
 public class ClientManagementPanel extends JPanel {
     private final UtilisateurDAO userDao = new UtilisateurDAOImpl();
     private final DefaultTableModel model;
@@ -23,7 +21,6 @@ public class ClientManagementPanel extends JPanel {
         setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Colonnes du tableau
         String[] cols = {"ID", "Nom", "Prénom", "Email", "Rôle"};
         model = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
@@ -31,7 +28,6 @@ public class ClientManagementPanel extends JPanel {
         table = new JTable(model);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // Boutons Ajouter/Modifier/Supprimer
         JPanel btnPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnPane.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         JButton addB  = new JButton("Ajouter");
@@ -40,10 +36,8 @@ public class ClientManagementPanel extends JPanel {
         btnPane.add(addB); btnPane.add(editB); btnPane.add(delB);
         add(btnPane, BorderLayout.SOUTH);
 
-        // Chargement initial
         loadTable();
 
-        // Actions
         addB.addActionListener(e -> {
             Frame owner = (Frame) SwingUtilities.getWindowAncestor(this);
             ClientEditDialog dlg = new ClientEditDialog(owner, userDao, null);
@@ -82,15 +76,8 @@ public class ClientManagementPanel extends JPanel {
     private void loadTable() {
         model.setRowCount(0);
         List<Utilisateur> list = userDao.findAll();
-        // même si la liste est vide, on ne crashe plus
         for (Utilisateur u : list) {
-            model.addRow(new Object[]{
-                    u.getIdUtilisateur(),
-                    u.getNom(),
-                    u.getPrenom(),
-                    u.getEmail(),
-                    u.getRole()
-            });
+            model.addRow(new Object[]{u.getIdUtilisateur(), u.getNom(), u.getPrenom(), u.getEmail(), u.getRole()});
         }
     }
 }

@@ -1,4 +1,3 @@
-// src/view/NavigationBarPanel.java
 package view;
 
 import Controlers.CartController;
@@ -10,6 +9,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+/** classe de la barre de navigation */
+
 public class NavigationBarPanel extends JPanel {
     public static final Color BACKGROUND_COLOR = new Color(253, 247, 240);
     static final Color LINE_COLOR = new Color(111, 57, 46);
@@ -18,12 +19,10 @@ public class NavigationBarPanel extends JPanel {
 
     private final CartController cartController;
 
-    /** Constructeur par défaut */
     public NavigationBarPanel() {
         this(null);
     }
 
-    /** Constructeur principal, on peut passer un CartController pour l’onglet Panier */
     public NavigationBarPanel(CartController cartController) {
         this.cartController = cartController;
         initUI();
@@ -33,17 +32,17 @@ public class NavigationBarPanel extends JPanel {
         setBackground(BACKGROUND_COLOR);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        // barre supérieure (petit message + séparateur)
         JPanel topMsg = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         topMsg.setBackground(BACKGROUND_COLOR);
-        JLabel msg = new JLabel("Découvrez la pièce iconique");
+        JLabel msg = new JLabel("Découvrez nos pièces iconiques");
         msg.setFont(new Font("SansSerif", Font.ITALIC, 14));
         msg.setForeground(TEXT_COLOR);
         topMsg.add(msg);
         add(topMsg);
 
         JPanel sep = new JPanel() {
-            @Override protected void paintComponent(Graphics g) {
+            @Override
+            protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 g.setColor(LINE_COLOR);
                 g.fillRect(0, getHeight()/2, getWidth(), 2);
@@ -53,11 +52,9 @@ public class NavigationBarPanel extends JPanel {
         sep.setBackground(BACKGROUND_COLOR);
         add(sep);
 
-        // menu principal
         JPanel menu = new JPanel(new BorderLayout());
         menu.setBackground(BACKGROUND_COLOR);
 
-        // 3a) Titre textuel à gauche
         JPanel left = new JPanel();
         left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
         left.setBackground(BACKGROUND_COLOR);
@@ -70,7 +67,6 @@ public class NavigationBarPanel extends JPanel {
         left.add(brand);
         menu.add(left, BorderLayout.WEST);
 
-        // 3b) Onglets centraux
         JPanel center = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         center.setBackground(BACKGROUND_COLOR);
         for (String text : new String[]{"Articles", "Marques", "Soldes"}) {
@@ -78,7 +74,6 @@ public class NavigationBarPanel extends JPanel {
         }
         menu.add(center, BorderLayout.CENTER);
 
-        // 3c) Onglets à droite
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 10));
         right.setBackground(BACKGROUND_COLOR);
         for (String text : new String[]{"Recherche","Mon compte", "Panier"}) {
@@ -88,30 +83,31 @@ public class NavigationBarPanel extends JPanel {
 
         add(menu);
     }
-
+/** Ouverture de la fenetre de l'onglet cliqué */
     private JLabel createMenuLabel(String text) {
         JLabel lbl = new JLabel(text);
         lbl.setFont(new Font("SansSerif", Font.PLAIN, 14));
         lbl.setForeground(TEXT_COLOR);
         lbl.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         lbl.addMouseListener(new MouseAdapter() {
-            @Override public void mouseEntered(MouseEvent e) {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
                 lbl.setForeground(MENU_HOVER_COLOR);
             }
-            @Override public void mouseExited(MouseEvent e) {
+            @Override
+            public void mouseExited(MouseEvent e) {
                 lbl.setForeground(TEXT_COLOR);
             }
-            @Override public void mouseClicked(MouseEvent e) {
+            @Override
+            public void mouseClicked(MouseEvent e) {
                 switch (text) {
-                    case "Articles"       -> SwingUtilities.invokeLater(() -> new CatalogFrame().setVisible(true));
-                    case "Recherche"      -> SwingUtilities.invokeLater(() -> new ArticleSearchFrame().setVisible(true));
-                    case "Marques"        -> SwingUtilities.invokeLater(() -> new BrandsFrame().setVisible(true));
-                    case "Soldes"         -> SwingUtilities.invokeLater(() -> new SaleFrame().setVisible(true));
-                    case "Mon compte"     -> SwingUtilities.invokeLater(() -> new AccountFrame().setVisible(true));
-                    case "Panier"         -> {
-                        CartController cc = cartController != null
-                                ? cartController
-                                : ShoppingController.getInstance().getCartController();
+                    case "Articles" -> SwingUtilities.invokeLater(() -> new CatalogFrame().setVisible(true));
+                    case "Recherche" -> SwingUtilities.invokeLater(() -> new ArticleSearchFrame().setVisible(true));
+                    case "Marques" -> SwingUtilities.invokeLater(() -> new BrandsFrame().setVisible(true));
+                    case "Soldes" -> SwingUtilities.invokeLater(() -> new SaleFrame().setVisible(true));
+                    case "Mon compte" -> SwingUtilities.invokeLater(() -> new AccountFrame().setVisible(true));
+                    case "Panier" -> {CartController cc = cartController != null ? cartController : ShoppingController.getInstance().getCartController();
                         SwingUtilities.invokeLater(() -> new PanierView(cc).setVisible(true));
                     }
                 }

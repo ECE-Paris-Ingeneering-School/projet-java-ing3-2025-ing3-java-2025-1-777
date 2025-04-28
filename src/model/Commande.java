@@ -12,14 +12,12 @@ public class Commande {
     private double totalCommande;
 
     private String adresseLivraison;
-    private String status;       // "EN_COURS", "LIVREE", "ANNULEE"
+    private String status;
     private Date dateLivraison;
 
     public Commande() {}
 
-    public Commande(int idCommande, int idUtilisateur, Date dateCommande,
-                    double totalCommande, String adresseLivraison,
-                    String status, Date dateLivraison) {
+    public Commande(int idCommande, int idUtilisateur, Date dateCommande, double totalCommande, String adresseLivraison, String status, Date dateLivraison) {
         this.idCommande = idCommande;
         this.idUtilisateur = idUtilisateur;
         this.dateCommande = dateCommande;

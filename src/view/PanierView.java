@@ -15,6 +15,8 @@ import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import model.Discount;
+import DAO.DiscountDAOImpl;
 
 public class PanierView extends JFrame {
     private final CartController cartController;
@@ -101,15 +103,17 @@ public class PanierView extends JFrame {
     }
 
     private void rebuildLines() {
-        linesPanel.removeAll();
-        lines.clear();
+        linesPanel.removeAll(); // Vider le panneau des lignes
+        lines.clear(); // Vider la liste des lignes
+
+        // Recréer les lignes
         for (var entry : cartController.getPanier().getArticles().entrySet()) {
             Line line = new Line(entry.getKey(), entry.getValue());
             lines.add(line);
             linesPanel.add(line.panel);
         }
-        linesPanel.revalidate();
-        linesPanel.repaint();
+        linesPanel.revalidate(); // Rafraîchir le panel
+        linesPanel.repaint(); // Rafraîchir l'affichage
     }
 
     private void updateTotals() {
@@ -127,6 +131,7 @@ public class PanierView extends JFrame {
         final JSpinner spinner;
         final JLabel lineDetail;
         final JLabel bulkLineRed;
+        final JLabel discountLabel;
         double currentLineTotal;
 
         Line(Article art, int initQty) {
@@ -170,8 +175,8 @@ public class PanierView extends JFrame {
             del.setBorder(BorderFactory.createLineBorder(NavigationBarPanel.LINE_COLOR));
             del.addActionListener(e -> {
                 cartController.supprimerArticle(art);
-                rebuildLines();
-                updateTotals();
+                rebuildLines(); // Rebuild de l'affichage après suppression
+                updateTotals(); // Mise à jour des totaux
             });
             row1.add(del);
 
@@ -187,6 +192,17 @@ public class PanierView extends JFrame {
             lineDetail.setForeground(NavigationBarPanel.TEXT_COLOR);
             panel.add(lineDetail);
 
+            // Affichage de la réduction
+            Discount discount = new DiscountDAOImpl().getDiscountForArticle(art.getIdArticle());
+            discountLabel = new JLabel();
+            if (discount != null) {
+                double discountAmount = art.getPrixUnitaire() * discount.getTaux() / 100;
+                discountLabel.setText("Réduction : " + String.format("- %.2f €", discountAmount));
+            } else {
+                discountLabel.setText("Pas de réduction");
+            }
+            panel.add(discountLabel);
+
             updateLine();
         }
 
@@ -195,6 +211,12 @@ public class PanierView extends JFrame {
             int bulkQty      = art.getQuantiteBulk();
             double unitPrice = art.getPrixUnitaire();
             double bulkPrice = art.getPrixBulk();
+
+            // Appliquer la réduction si elle existe
+            Discount discount = new DiscountDAOImpl().getDiscountForArticle(art.getIdArticle());
+            if (discount != null) {
+                unitPrice = unitPrice * (1 - discount.getTaux() / 100);  // Appliquer la remise
+            }
 
             if (bulkQty > 0 && q >= bulkQty) {
                 int packs = q / bulkQty;

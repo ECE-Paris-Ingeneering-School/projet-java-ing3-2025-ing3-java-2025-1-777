@@ -3,12 +3,17 @@ package DAO;
 import Utils.DBConnection;
 import model.Utilisateur;
 
-import javax.swing.*;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
+/**
+ * Implémentation JDBC de UtilisateurDAO.
+ */
 public class UtilisateurDAOImpl implements UtilisateurDAO {
+    /**
+     * Recherche un utilisateur par son identifiant.
+     */
     @Override
     public Utilisateur findById(int id) {
         Utilisateur user = null;
@@ -31,7 +36,9 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
         }
         return user;
     }
-
+    /**
+     * Recherche un utilisateur par email et mot de passe.
+     */
     @Override
     public Utilisateur findByEmailAndPassword(String email, String motDePasse) {
         Utilisateur user = null;
@@ -41,7 +48,7 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email.trim());
-            ps.setString(2, motDePasse);  // preserve exact password
+            ps.setString(2, motDePasse);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 user = new Utilisateur();
@@ -60,12 +67,16 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
         }
         return user;
     }
-
+    /**
+     * Vérifie si l'email est déjà utilisé par un utilisateur.
+     */
     @Override
     public boolean emailExists(String email) {
         return false;
     }
-
+    /**
+     * methode qui récupère tous les utilisateurs.
+     */
     @Override
     public List<Utilisateur> findAll() {
         List<Utilisateur> users = new ArrayList<>();
@@ -89,7 +100,9 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
         }
         return users;
     }
-
+    /**
+     * Ajoute un nouvel utilisateur dans la BDD
+     */
     @Override
     public boolean insert(Utilisateur user) {
         String sql = "INSERT INTO Utilisateur (nom, prenom, email, mot_de_passe, role) VALUES (?, ?, ?, ?, ?)";
@@ -130,7 +143,9 @@ public class UtilisateurDAOImpl implements UtilisateurDAO {
             return false;
         }
     }
-
+    /**
+     * Supprime un utilisateur par son identifiant de la BDD
+     */
     @Override
     public boolean delete(int id) {
         String sql = "DELETE FROM Utilisateur WHERE id_utilisateur = ?";

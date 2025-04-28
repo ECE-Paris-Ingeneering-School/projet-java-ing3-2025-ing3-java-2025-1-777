@@ -1,7 +1,5 @@
 package DAO;
 
-
-
 import model.Utilisateur;
 
 /**

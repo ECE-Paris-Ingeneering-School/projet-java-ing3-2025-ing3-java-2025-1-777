@@ -11,7 +11,9 @@ import java.util.List;
  * Implémentation JDBC de MarqueDAO.
  */
 public class MarqueDAOImpl implements MarqueDAO {
-
+    /**
+     * Recherche une marque par son identifiant.
+     */
     @Override
     public Marque findById(int id) {
         Marque marque = null;
@@ -33,7 +35,9 @@ public class MarqueDAOImpl implements MarqueDAO {
         }
         return marque;
     }
-
+    /**
+     * methode qui récupère toutes les marques.
+     */
     @Override
     public List<Marque> findAll() {
         List<Marque> marques = new ArrayList<>();
@@ -53,7 +57,9 @@ public class MarqueDAOImpl implements MarqueDAO {
         }
         return marques;
     }
-
+    /**
+     * Ajoute une marque à la BDD.
+     */
     @Override
     public boolean insert(Marque marque) {
         String sql = "INSERT INTO Marque (nom) VALUES (?)";
@@ -75,7 +81,9 @@ public class MarqueDAOImpl implements MarqueDAO {
         }
         return false;
     }
-
+    /**
+     * Met à jour une marque dans la BDD.
+     */
     @Override
     public boolean update(Marque marque) {
         String sql = "UPDATE Marque SET nom = ? WHERE id_marque = ?";
@@ -90,7 +98,9 @@ public class MarqueDAOImpl implements MarqueDAO {
         }
         return false;
     }
-
+    /**
+     * supprime une marque de la BDD.
+     */
     @Override
     public boolean delete(int id) {
         String sql = "DELETE FROM Marque WHERE id_marque = ?";

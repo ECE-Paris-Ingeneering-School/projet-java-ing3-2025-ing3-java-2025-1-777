@@ -7,15 +7,18 @@ import model.Article;
 import model.Marque;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
+import javax.swing.border.*;
 import java.awt.*;
 import java.util.List;
+/** classe  de dialogue
+ * permet la modification des propriétés des articles par l'admin
+ */
 
 public class ArticleEditDialog extends JDialog {
     private final ProductController prodCtrl;
-    private final Article article;   // null = création
+    private final Article article;
 
-    private JTextField nameF, descF, puF, pbF, qbF, stF;
+    private JTextField name, desc, pu, pb, qb, stock;
     private JComboBox<Marque> brandC;
 
     public ArticleEditDialog(Frame owner, ProductController prodCtrl, Article article) {
@@ -24,39 +27,55 @@ public class ArticleEditDialog extends JDialog {
         this.article  = article;
         initUI();
     }
-
+    /**
+     * Initialise l'interface utilisateur
+     * permet d'afficher les champs du formulaire
+     */
     private void initUI() {
         setLayout(new BorderLayout());
         JPanel form = new JPanel(new GridLayout(0,2,10,10));
         form.setBorder(new EmptyBorder(15,15,15,15));
         form.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
 
-        form.add(new JLabel("Nom :"));      nameF = new JTextField(); form.add(nameF);
-        form.add(new JLabel("Marque :"));   brandC = new JComboBox<>(); form.add(brandC);
-        form.add(new JLabel("Description :")); descF=new JTextField(); form.add(descF);
-        form.add(new JLabel("Prix Unitaire :")); puF=new JTextField(); form.add(puF);
-        form.add(new JLabel("Prix Bulk :"));    pbF=new JTextField(); form.add(pbF);
-        form.add(new JLabel("Quantité Bulk :")); qbF=new JTextField(); form.add(qbF);
-        form.add(new JLabel("Stock :"));        stF=new JTextField(); form.add(stF);
+        form.add(new JLabel("Nom :"));
+        name = new JTextField();
+        form.add(name);
+        form.add(new JLabel("Marque :"));
+        brandC = new JComboBox<>();
+        form.add(brandC);
+        form.add(new JLabel("Description :"));
+        desc=new JTextField();
+        form.add(desc);
+        form.add(new JLabel("Prix Unitaire :"));
+        pu=new JTextField();
+        form.add(pu);
+        form.add(new JLabel("Prix Bulk :"));
+        pb=new JTextField();
+        form.add(pb);
+        form.add(new JLabel("Quantité Bulk :"));
+        qb=new JTextField();
+        form.add(qb);
+        form.add(new JLabel("Stock :"));
+        stock=new JTextField();
+        form.add(stock);
 
         add(form, BorderLayout.CENTER);
 
-        // charge marques
+
         MarqueDAO mdao = new MarqueDAOImpl();
         List<Marque> marques = mdao.findAll();
         DefaultComboBoxModel<Marque> cbm = new DefaultComboBoxModel<>();
         for (Marque m : marques) cbm.addElement(m);
         brandC.setModel(cbm);
 
-        // si édition, pré-remplir
         if (article != null) {
-            nameF.setText(article.getNom());
-            descF.setText(article.getDescription());
-            puF.setText(Double.toString(article.getPrixUnitaire()));
-            pbF.setText(Double.toString(article.getPrixBulk()));
-            qbF.setText(Integer.toString(article.getQuantiteBulk()));
-            stF.setText(Integer.toString(article.getStock()));
-            // sélectionner la bonne marque
+            name.setText(article.getNom());
+            desc.setText(article.getDescription());
+            pu.setText(Double.toString(article.getPrixUnitaire()));
+            pb.setText(Double.toString(article.getPrixBulk()));
+            qb.setText(Integer.toString(article.getQuantiteBulk()));
+            stock.setText(Integer.toString(article.getStock()));
+
             for (int i=0;i<brandC.getItemCount();i++){
                 if (brandC.getItemAt(i).getIdMarque()==article.getIdMarque()){
                     brandC.setSelectedIndex(i);
@@ -66,34 +85,36 @@ public class ArticleEditDialog extends JDialog {
         }
 
         JButton save = new JButton("Enregistrer");
-        save.addActionListener(e -> onSave());
+        save.addActionListener(e -> Save());
         add(save, BorderLayout.SOUTH);
 
         pack();
         setLocationRelativeTo(getOwner());
     }
-
-    private void onSave() {
+    /**
+     * Récupère les valeurs saisies, crée ou met à jour l'article via le contrôleur
+     */
+    private void Save() {
         try {
-            String nom   = nameF.getText().trim();
-            String desc  = descF.getText().trim();
-            double pu    = Double.parseDouble(puF.getText().trim());
-            double pb    = Double.parseDouble(pbF.getText().trim());
-            int qb       = Integer.parseInt(qbF.getText().trim());
-            int st       = Integer.parseInt(stF.getText().trim());
-            Marque m     = (Marque)brandC.getSelectedItem();
+            String nom = name.getText().trim();
+            String descr = desc.getText().trim();
+            double pru = Double.parseDouble(pu.getText().trim());
+            double prb = Double.parseDouble(pb.getText().trim());
+            int qtb = Integer.parseInt(qb.getText().trim());
+            int st = Integer.parseInt(stock.getText().trim());
+            Marque m = (Marque)brandC.getSelectedItem();
 
             if (nom.isEmpty()||m==null) {
-                JOptionPane.showMessageDialog(this,"Nom et marque obligatoires");
+                JOptionPane.showMessageDialog(this,"Le nom et la marque sont obligatoires");
                 return;
             }
 
             Article a = (article!=null ? article : new Article());
             a.setNom(nom);
-            a.setDescription(desc);
-            a.setPrixUnitaire(pu);
-            a.setPrixBulk(pb);
-            a.setQuantiteBulk(qb);
+            a.setDescription(descr);
+            a.setPrixUnitaire(pru);
+            a.setPrixBulk(prb);
+            a.setQuantiteBulk(qtb);
             a.setStock(st);
             a.setIdMarque(m.getIdMarque());
 

@@ -9,12 +9,12 @@ import java.util.Map;
 
 /**
  * Implémentation JDBC de CartItemDAO.
- * Nécessite une table SQL CartItem(user_id INT, article_id INT, quantity INT,
- *   PRIMARY KEY(user_id,article_id))
  */
 public class CartItemDAOImpl implements CartItemDAO {
     private final ArticleDAO articleDAO = new ArticleDAOImpl();
-
+/**
+ * Récupère tous les items du panier pour l'utilisateur .
+ */
     @Override
     public Map<Article,Integer> findByUser(int userId) {
         String sql = "SELECT article_id, quantity FROM CartItem WHERE user_id = ?";
@@ -35,7 +35,9 @@ public class CartItemDAOImpl implements CartItemDAO {
         }
         return map;
     }
-
+/**
+ * Insère un nouvel article ou met à jour sa quantité.
+ */
     @Override
     public boolean saveOrUpdate(int userId, int articleId, int quantity) {
         String sql = """
@@ -55,7 +57,9 @@ public class CartItemDAOImpl implements CartItemDAO {
             return false;
         }
     }
-
+/**
+ * Supprime un article du panier
+ */
     @Override
     public boolean delete(int userId, int articleId) {
         String sql = "DELETE FROM CartItem WHERE user_id = ? AND article_id = ?";
@@ -69,7 +73,9 @@ public class CartItemDAOImpl implements CartItemDAO {
             return false;
         }
     }
-
+/**
+ * Vide complètement le panier
+ */
     @Override
     public boolean clear(int userId) {
         String sql = "DELETE FROM CartItem WHERE user_id = ?";

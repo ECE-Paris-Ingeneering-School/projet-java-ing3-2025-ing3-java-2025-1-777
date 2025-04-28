@@ -1,4 +1,3 @@
-// src/view/ProductDetailFrame.java
 package view;
 
 import Controlers.CartController;
@@ -13,40 +12,29 @@ import java.awt.*;
 import java.io.File;
 import java.net.URL;
 
-/**
- * Fenêtre full-screen de détail d'un produit :
- * - image agrandie à gauche (400×400)
- * - choix visuel de taille (non transmis au controller)
- * - infos à droite
- * - footer en bas
- */
+/** classe qui permet d'afficher les détails des produits*/
 public class ProductDetailFrame extends JFrame {
 
     private final Article product;
     private final ProductController productController;
     private final CartController cartController;
 
-    public ProductDetailFrame(Article product,
-                              ProductController productController,
-                              CartController cartController) {
+    public ProductDetailFrame(Article product, ProductController productController, CartController cartController) {
         this.product = product;
         this.productController = productController;
         this.cartController = cartController;
         initUI();
     }
-
+    /** Initialisation de l'interface graphique*/
     private void initUI() {
         setTitle(product.getNom() + " – Détails");
-        // plein écran
         setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         getContentPane().setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         setLayout(new BorderLayout());
 
-        // barre de navigation
         add(new NavigationBarPanel(cartController), BorderLayout.NORTH);
 
-        // ─── Image à gauche (400×400) ─────────────────────────
         JPanel west = new JPanel(new BorderLayout());
         west.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         west.setBorder(new EmptyBorder(20,20,20,20));
@@ -67,7 +55,6 @@ public class ProductDetailFrame extends JFrame {
         west.add(imgLabel, BorderLayout.NORTH);
         add(west, BorderLayout.WEST);
 
-        // ─── Infos produit au centre ───────────────────────────
         JPanel center = new JPanel();
         center.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
@@ -137,25 +124,19 @@ public class ProductDetailFrame extends JFrame {
 
         add(center, BorderLayout.CENTER);
 
-        // ─── Footer en bas (taille + quantité + boutons) ───────
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
         footer.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         footer.setBorder(new EmptyBorder(10,20,20,20));
 
-        // choix de la taille (visuel uniquement)
         footer.add(new JLabel("Taille :"));
         String[] tailles = { "XS", "S", "M", "L", "XL" };
         JComboBox<String> sizeCombo = new JComboBox<>(tailles);
         footer.add(sizeCombo);
 
-        // quantité
         footer.add(new JLabel("Quantité :"));
-        JSpinner spinner = new JSpinner(
-                new SpinnerNumberModel(1, 1, product.getStock(), 1)
-        );
+        JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 1, product.getStock(), 1));
         footer.add(spinner);
 
-        // bouton ajouter au panier
         JButton addBtn = new JButton("Ajouter au panier");
         addBtn.addActionListener(e -> {
             int qty = (Integer) spinner.getValue();
@@ -173,7 +154,6 @@ public class ProductDetailFrame extends JFrame {
         });
         footer.add(addBtn);
 
-        // bouton retour
         JButton back = new JButton("Retour");
         back.addActionListener(e -> dispose());
         footer.add(back);
@@ -187,13 +167,12 @@ public class ProductDetailFrame extends JFrame {
     private ImageIcon loadProductImage(String path) {
         if (path == null || path.isBlank()) return null;
 
-        // 1) classpath
         String rp = path.startsWith("/") ? path : "/" + path;
         URL url = getClass().getResource(rp);
         if (url != null) {
             return new ImageIcon(url);
         }
-        // 2) fichier local
+
         File f = new File(path);
         if (f.exists()) {
             return new ImageIcon(f.getAbsolutePath());

@@ -3,10 +3,9 @@ package view;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Fenêtre principale de l’administration
- */
+/** classe de la Page de l’administrateur*/
 public class AdminDashboardFrame extends JFrame {
+
     public AdminDashboardFrame() {
         setTitle("Admin Dashboard – Application Shopping");
         setSize(1200, 800);
@@ -14,10 +13,8 @@ public class AdminDashboardFrame extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Barre de navigation
         add(new NavigationBarPanel(), BorderLayout.NORTH);
 
-        // Onglets d’administration
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         tabbedPane.addTab("Articles", new ArticleManagementPanel());

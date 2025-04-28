@@ -1,4 +1,3 @@
-// src/view/AccountFrame.java
 package view;
 
 import Controlers.CartController;
@@ -13,12 +12,15 @@ import model.Article;
 import model.Utilisateur;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.border.*;
+import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
+import java.awt.event.*;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.*;
+/** classe du compte de l'utilisateur (client)
+ * Permet d'afficher les informations personnelles du client et de consulter ses commandes
+ */
 
 public class AccountFrame extends JFrame {
     private final ShoppingController shop = ShoppingController.getInstance();
@@ -34,7 +36,7 @@ public class AccountFrame extends JFrame {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // barre de navigation
+
         add(new NavigationBarPanel(cartController), BorderLayout.NORTH);
 
         JPanel main = new JPanel();
@@ -42,7 +44,6 @@ public class AccountFrame extends JFrame {
         main.setBorder(new EmptyBorder(10, 10, 10, 10));
         main.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
 
-        // infos utilisateur
         main.add(new JLabel("Nom : " + currentUser.getNom()));
         main.add(new JLabel("Prénom : " + currentUser.getPrenom()));
         main.add(new JLabel("Email : " + currentUser.getEmail()));
@@ -51,7 +52,10 @@ public class AccountFrame extends JFrame {
         // historique des commandes
         String[] cols = {"N° commande", "Articles", "Date cmd", "Date livraison", "Total (€)", "Statut"};
         DefaultTableModel model = new DefaultTableModel(cols, 0) {
-            @Override public boolean isCellEditable(int row, int col) { return false; }
+            @Override
+            public boolean isCellEditable(int row, int col) {
+                return false;
+            }
         };
         JTable table = new JTable(model);
         List<Commande> liste = commandeDAO.findByUser(currentUser.getIdUtilisateur());
@@ -59,9 +63,7 @@ public class AccountFrame extends JFrame {
             List<LigneCommande> lignes = ligneDAO.findByCommandeId(c.getIdCommande());
             String artList = lignes.stream()
                     .map(l -> {
-                        Article a = shop.getCatalogue().stream()
-                                .filter(x->x.getIdArticle()==l.getIdArticle())
-                                .findFirst().orElse(null);
+                        Article a = shop.getCatalogue().stream().filter(x->x.getIdArticle()==l.getIdArticle()).findFirst().orElse(null);
                         return a!=null
                                 ? a.getNom() + " ×" + l.getQuantite()
                                 : "";
@@ -82,7 +84,7 @@ public class AccountFrame extends JFrame {
         main.add(scroll);
         main.add(Box.createVerticalStrut(10));
 
-        // bouton Annuler
+
         JPanel btns = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         btns.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
 
@@ -100,7 +102,7 @@ public class AccountFrame extends JFrame {
         });
         btns.add(cancel);
 
-        // bouton Voir facture
+
         JButton view = new JButton("Voir facture");
         view.addActionListener(ev -> {
             int r = table.getSelectedRow();

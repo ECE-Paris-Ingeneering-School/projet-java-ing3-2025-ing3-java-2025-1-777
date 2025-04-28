@@ -1,12 +1,12 @@
-// src/view/CheckoutFrame.java
 package view;
 
 import Controlers.CartController;
 import DAO.CommandeDAO;
 import DAO.CommandeDAOImpl;
 import model.Article;
+import DAO.DiscountDAOImpl;
 import model.Commande;
-
+import model.Discount;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -16,6 +16,7 @@ import java.util.Map;
 
 public class CheckoutFrame extends JFrame {
     private final CartController cartController;
+    private JPanel recapPanel; // Déclaration du panneau de récapitulatif des articles
 
     private final JTextField addressField;
     private final JTextField cityField;
@@ -46,29 +47,43 @@ public class CheckoutFrame extends JFrame {
         center.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         // 1) RÉCAPITULATIF DES ARTICLES
-        JPanel recapPanel = new JPanel();
+        recapPanel = new JPanel();
         recapPanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         recapPanel.setLayout(new BoxLayout(recapPanel, BoxLayout.Y_AXIS));
         recapPanel.setBorder(BorderFactory.createTitledBorder("Vos articles"));
 
-        // Affichage ligne à ligne
+        // Affichage ligne à ligne avec bouton de suppression
         for (Map.Entry<Article, Integer> entry : cartController.getPanier().getArticles().entrySet()) {
             Article art = entry.getKey();
             int qty = entry.getValue();
-            // on reprend le calcul HT pour l'affichage par ligne
-            int bulkQty     = art.getQuantiteBulk();
-            double unit     = art.getPrixUnitaire();
-            double bulkPrice= art.getPrixBulk();
+
+            // Appliquer la remise
+            Discount discount = new DiscountDAOImpl().getDiscountForArticle(art.getIdArticle());
+            double unitPrice = art.getPrixUnitaire();
+            if (discount != null) {
+                unitPrice = unitPrice * (1 - discount.getTaux() / 100); // Appliquer la remise
+            }
+
+            int bulkQty = art.getQuantiteBulk();
+            double bulkPrice = art.getPrixBulk();
             double linePrice;
             if (bulkQty > 0 && qty >= bulkQty) {
-                int groups    = qty / bulkQty;
+                int groups = qty / bulkQty;
                 int remainder = qty % bulkQty;
-                linePrice = groups * bulkPrice + remainder * unit;
+                linePrice = groups * bulkPrice + remainder * unitPrice;
             } else {
-                linePrice = qty * unit;
+                linePrice = qty * unitPrice;
             }
-            recapPanel.add(new JLabel(qty + " × " + art.getNom() + "   →   "
-                    + String.format("%.2f €", linePrice)));
+
+            // Ligne d'article avec bouton de suppression
+            JPanel articlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            articlePanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+            JLabel articleLabel = new JLabel(qty + " × " + art.getNom() + "   →   " + String.format("%.2f €", linePrice));
+            articlePanel.add(articleLabel);
+            JButton removeButton = new JButton("Supprimer");
+            removeButton.addActionListener(e -> removeArticle(art)); // Action pour supprimer l'article
+            articlePanel.add(removeButton);
+            recapPanel.add(articlePanel);
         }
 
         // 2) TOTAL TTC
@@ -117,6 +132,51 @@ public class CheckoutFrame extends JFrame {
         footer.add(validateButton);
 
         add(footer, BorderLayout.SOUTH);
+    }
+
+    /**
+     * Supprime un article du panier et met à jour l'affichage.
+     *
+     * @param article L'article à supprimer du panier.
+     */
+    private void removeArticle(Article article) {
+        // Suppression de l'article du panier
+        cartController.supprimerArticle(article);
+
+        // Mise à jour de l'affichage après la suppression
+        recapPanel.removeAll(); // Supprimer toutes les lignes d'article
+        for (Map.Entry<Article, Integer> entry : cartController.getPanier().getArticles().entrySet()) {
+            Article art = entry.getKey();
+            int qty = entry.getValue();
+            int bulkQty = art.getQuantiteBulk();
+            double unit = art.getPrixUnitaire();
+            double bulkPrice = art.getPrixBulk();
+            double linePrice;
+            if (bulkQty > 0 && qty >= bulkQty) {
+                int groups = qty / bulkQty;
+                int remainder = qty % bulkQty;
+                linePrice = groups * bulkPrice + remainder * unit;
+            } else {
+                linePrice = qty * unit;
+            }
+
+            // Ligne d'article mise à jour avec le bouton de suppression
+            JPanel articlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            articlePanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+            JLabel articleLabel = new JLabel(qty + " × " + art.getNom() + "   →   " + String.format("%.2f €", linePrice));
+            articlePanel.add(articleLabel);
+            JButton removeButton = new JButton("Supprimer");
+            removeButton.addActionListener(e -> removeArticle(art)); // Action pour supprimer l'article
+            articlePanel.add(removeButton);
+            recapPanel.add(articlePanel);
+        }
+        recapPanel.revalidate();
+        recapPanel.repaint();
+        double totalTTC = cartController.calculerTotalTTC();
+        JLabel totalLabel = new JLabel("Total (TTC) : " + String.format("%.2f €", totalTTC));
+        totalLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        recapPanel.add(Box.createVerticalStrut(10));
+        recapPanel.add(totalLabel);
     }
 
     private void onValidate(ActionEvent e) {

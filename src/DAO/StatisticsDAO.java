@@ -1,4 +1,3 @@
-// src/DAO/StatisticsDAO.java
 package DAO;
 
 import Utils.DBConnection;
@@ -6,7 +5,9 @@ import Utils.DBConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
+/**
+ * Interface DAO pour les statistiques.
+ */
 public class StatisticsDAO {
 
     public record Totals(int totalOrders, double totalRevenue) {}

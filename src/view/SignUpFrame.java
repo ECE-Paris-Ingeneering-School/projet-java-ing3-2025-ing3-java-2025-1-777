@@ -9,7 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 /**
- * Fenêtre de création de compte pour un nouvel utilisateur.
+ * classe qui permet de créer un compte pour un nouvel utilisateur.
  */
 public class SignUpFrame extends JFrame {
     private JTextField nomField;
@@ -25,7 +25,7 @@ public class SignUpFrame extends JFrame {
         utilisateurDAO = new UtilisateurDAOImpl();
         initComponents();
     }
-
+/** Initialisations des composants de la fenetre de creation du compte*/
     private void initComponents() {
         setTitle("Création de compte");
         setSize(480, 320);
@@ -34,7 +34,6 @@ public class SignUpFrame extends JFrame {
         setLayout(new BorderLayout());
         getContentPane().setBackground(Color.WHITE);
 
-        // Header
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
         headerPanel.setBackground(Color.WHITE);
         JLabel headerLabel = new JLabel("Création de compte");
@@ -43,12 +42,10 @@ public class SignUpFrame extends JFrame {
         headerPanel.add(headerLabel);
         add(headerPanel, BorderLayout.NORTH);
 
-        // Formulaire
         JPanel formPanel = new JPanel(new GridLayout(6, 2, 5, 5));
         formPanel.setBackground(Color.WHITE);
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
 
-        // Labels et champs
         formPanel.add(new JLabel("Nom :"));
         nomField = new JTextField();
         formPanel.add(nomField);
@@ -80,7 +77,6 @@ public class SignUpFrame extends JFrame {
 
         add(formPanel, BorderLayout.CENTER);
 
-        // Footer
         JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         footerPanel.setBackground(Color.WHITE);
         JLabel copyLabel = new JLabel("© 2025 Loro Piana");
@@ -89,7 +85,6 @@ public class SignUpFrame extends JFrame {
         footerPanel.add(copyLabel);
         add(footerPanel, BorderLayout.SOUTH);
 
-        // Action sur le bouton
         signUpButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

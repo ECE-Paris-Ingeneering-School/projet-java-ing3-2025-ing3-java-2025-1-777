@@ -7,24 +7,25 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
+/** classe de la gestion des clients pour l'admin */
+
 public class ClientEditDialog extends JDialog {
     private final UtilisateurDAO userDao;
-    private final Utilisateur client; // null = création
+    private final Utilisateur client;
 
     private JTextField nomF, prenomF, emailF, passF;
     private JComboBox<String> roleC;
 
-    public ClientEditDialog(Window owner,
-                            UtilisateurDAO userDao,
-                            Utilisateur client) {
-        super(owner,
-                client == null ? "Ajouter un client" : "Modifier un client",
-                ModalityType.APPLICATION_MODAL);
+
+    public ClientEditDialog(Window owner, UtilisateurDAO userDao, Utilisateur client) {
+        super(owner, client == null ? "Ajouter un client" : "Modifier un client", ModalityType.APPLICATION_MODAL);
         this.userDao = userDao;
         this.client = client;
         initUI();
     }
-
+    /**
+     * Initialisation de l'interface
+     */
     private void initUI() {
         setLayout(new BorderLayout());
         JPanel form = new JPanel(new GridLayout(5,2,5,5));
@@ -52,7 +53,6 @@ public class ClientEditDialog extends JDialog {
 
         add(form, BorderLayout.CENTER);
 
-        // Pré-remplir si édition
         if (client != null) {
             nomF.setText(client.getNom());
             prenomF.setText(client.getPrenom());
@@ -62,7 +62,7 @@ public class ClientEditDialog extends JDialog {
         }
 
         JButton saveB = new JButton("Enregistrer");
-        saveB.addActionListener(e -> onSave());
+        saveB.addActionListener(e -> Save());
         JPanel south = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         south.add(saveB);
         add(south, BorderLayout.SOUTH);
@@ -70,13 +70,13 @@ public class ClientEditDialog extends JDialog {
         pack();
         setLocationRelativeTo(getOwner());
     }
-
-    private void onSave() {
-        String nom    = nomF.getText().trim();
+    /** Crée et met à jour les infos des clients dans la bdd */
+    private void Save() {
+        String nom = nomF.getText().trim();
         String prenom = prenomF.getText().trim();
-        String email  = emailF.getText().trim();
-        String pass   = passF.getText().trim();
-        String role   = (String) roleC.getSelectedItem();
+        String email = emailF.getText().trim();
+        String pass = passF.getText().trim();
+        String role = (String) roleC.getSelectedItem();
 
         if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || pass.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Tous les champs sont obligatoires");

@@ -2,7 +2,9 @@ package model;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/**
+ * Classe qui représente un article du catalogue avec ses attributs .
+ */
 public class Article {
     private int idArticle;
     private String nom;
@@ -14,7 +16,8 @@ public class Article {
     private int idMarque;
     private List<String> imagePaths = new ArrayList<>();
 
-    // getters / setters standard
+  /**
+   * getters et setters pour la liste complète*/
     public int getIdArticle() { return idArticle; }
     public void setIdArticle(int idArticle) { this.idArticle = idArticle; }
 
@@ -39,13 +42,12 @@ public class Article {
     public int getIdMarque() { return idMarque; }
     public void setIdMarque(int idMarque) { this.idMarque = idMarque; }
 
-    // getter/setter pour la liste complète
     public List<String> getImagePaths() { return imagePaths; }
     public void setImagePaths(List<String> imagePaths) {
         this.imagePaths = imagePaths != null ? imagePaths : new ArrayList<>();
     }
 
-    // accès pratique à la première image (ou null)
+
     public String getImagePath() {
         return imagePaths.isEmpty() ? null : imagePaths.get(0);
     }

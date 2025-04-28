@@ -6,19 +6,13 @@ import Utils.DBConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
 /**
- * Implémentation de l'interface {@link LigneCommandeDAO} pour la gestion des lignes de commande dans la base de données.
- * Cette classe permet d'insérer des lignes de commande et de récupérer les lignes associées à une commande spécifique.
+ * Implémentation JDBC du DAO LigneCommandeDAO.
  */
 public class LigneCommandeDAOImpl implements LigneCommandeDAO {
-
-    /**
-     * Insère une nouvelle ligne de commande dans la base de données.
-     *
-     * @param ligne L'objet {@link LigneCommande} à insérer dans la base de données.
-     * @return true si l'insertion a réussi, false sinon.
-     */
+/**
+ * Insère une ligne de commande dans la BDD.
+ */
     @Override
     public boolean insert(LigneCommande ligne) {
         String sql = "INSERT INTO LigneCommande (id_commande, id_article, quantite, prix_total) VALUES (?, ?, ?, ?)";
@@ -34,13 +28,9 @@ public class LigneCommandeDAOImpl implements LigneCommandeDAO {
             return false;
         }
     }
-
-    /**
-     * Récupère les lignes de commande associées à une commande spécifique, identifiée par son ID.
-     *
-     * @param commandeId L'ID de la commande pour laquelle récupérer les lignes de commande.
-     * @return Une liste de lignes de commande correspondant à l'ID de la commande spécifiée.
-     */
+/**
+ * Récupère toutes les lignes de commande associées à une commande donnée.
+ */
     @Override
     public List<LigneCommande> findByCommandeId(int commandeId) {
         List<LigneCommande> lignes = new ArrayList<>();
