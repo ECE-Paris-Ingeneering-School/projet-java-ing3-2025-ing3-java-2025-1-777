@@ -20,7 +20,7 @@ public class Main {
                     "root",
                     ""
             );
-            System.out.println("Connexion réussie !");
+            System.out.println("La connexion réussie !");
             conn.close();
         } catch (Exception e) {
             e.printStackTrace();
