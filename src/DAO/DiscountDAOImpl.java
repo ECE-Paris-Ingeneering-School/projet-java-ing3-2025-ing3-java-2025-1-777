@@ -1,4 +1,3 @@
-// src/DAO/DiscountDAOImpl.java
 package DAO;
 
 import Utils.DBConnection;
@@ -8,7 +7,19 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Implémentation de l'interface {@link DiscountDAO} pour la gestion des remises dans la base de données.
+ * Cette classe permet de rechercher, insérer, mettre à jour et supprimer des remises, ainsi que de récupérer
+ * les remises associées à des articles spécifiques.
+ */
 public class DiscountDAOImpl implements DiscountDAO {
+
+    /**
+     * Récupère la remise associée à un article spécifié par son ID.
+     *
+     * @param idArticle L'ID de l'article pour lequel récupérer la remise.
+     * @return La remise correspondante à l'article, ou null si aucune remise n'est trouvée.
+     */
     @Override
     public Discount findByArticle(int idArticle) {
         String sql = "SELECT id_discount, description, taux, id_article FROM Discount WHERE id_article = ?";
@@ -31,6 +42,12 @@ public class DiscountDAOImpl implements DiscountDAO {
         return null;
     }
 
+    /**
+     * Récupère une remise à partir de son ID.
+     *
+     * @param id L'ID de la remise à récupérer.
+     * @return La remise correspondante à l'ID, ou null si non trouvée.
+     */
     @Override
     public Discount findById(int id) {
         String sql = "SELECT id_discount, description, taux, id_article FROM Discount WHERE id_discount = ?";
@@ -53,6 +70,11 @@ public class DiscountDAOImpl implements DiscountDAO {
         return null;
     }
 
+    /**
+     * Récupère toutes les remises disponibles dans la base de données.
+     *
+     * @return Une liste de toutes les remises présentes dans la base de données.
+     */
     @Override
     public List<Discount> findAll() {
         List<Discount> list = new ArrayList<>();
@@ -74,6 +96,12 @@ public class DiscountDAOImpl implements DiscountDAO {
         return list;
     }
 
+    /**
+     * Insère une nouvelle remise dans la base de données.
+     *
+     * @param d La remise à insérer.
+     * @return true si l'insertion a réussi, false sinon.
+     */
     @Override
     public boolean insert(Discount d) {
         String sql = "INSERT INTO Discount(description, taux, id_article) VALUES(?, ?, ?)";
@@ -97,6 +125,12 @@ public class DiscountDAOImpl implements DiscountDAO {
         }
     }
 
+    /**
+     * Met à jour une remise existante dans la base de données.
+     *
+     * @param d La remise avec les nouvelles informations à mettre à jour.
+     * @return true si la mise à jour a réussi, false sinon.
+     */
     @Override
     public boolean update(Discount d) {
         String sql = "UPDATE Discount SET description = ?, taux = ? WHERE id_discount = ?";
@@ -112,6 +146,12 @@ public class DiscountDAOImpl implements DiscountDAO {
         }
     }
 
+    /**
+     * Supprime une remise de la base de données en fonction de son ID.
+     *
+     * @param idDiscount L'ID de la remise à supprimer.
+     * @return true si la suppression a réussi, false sinon.
+     */
     @Override
     public boolean delete(int idDiscount) {
         String sql = "DELETE FROM Discount WHERE id_discount = ?";
@@ -125,7 +165,13 @@ public class DiscountDAOImpl implements DiscountDAO {
         }
     }
 
-    // Si vous n'utilisez pas getDiscountForArticle, vous pouvez la faire pointer sur findByArticle
+    /**
+     * Récupère la remise actuellement applicable à un article spécifique.
+     * Cette méthode pointe vers {@link #findByArticle(int)} pour la logique de récupération de remise.
+     *
+     * @param idArticle L'ID de l'article pour lequel récupérer la remise.
+     * @return La remise applicable à l'article, ou null si aucune remise n'est disponible.
+     */
     @Override
     public Discount getDiscountForArticle(int idArticle) {
         return findByArticle(idArticle);

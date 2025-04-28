@@ -9,8 +9,20 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Implémentation de l'interface {@link CommandeDAO} pour la gestion des commandes dans la base de données.
+ * Cette classe permet de créer, récupérer, annuler des commandes, et de mettre à jour le stock des articles.
+ */
 public class CommandeDAOImpl implements CommandeDAO {
 
+    /**
+     * Crée une nouvelle commande à partir du panier d'un utilisateur et d'une adresse de livraison.
+     * La commande inclut également la création des lignes de commande et la mise à jour du stock des articles.
+     *
+     * @param panier         Le panier contenant les articles à commander.
+     * @param adresseLivraison L'adresse de livraison pour la commande.
+     * @return true si la commande a été créée avec succès, false sinon.
+     */
     @Override
     public boolean creerCommande(Panier panier, String adresseLivraison) {
         if (panier == null || panier.getArticles() == null) {
@@ -40,12 +52,12 @@ public class CommandeDAOImpl implements CommandeDAO {
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement psCommande = conn.prepareStatement(sqlCommande, Statement.RETURN_GENERATED_KEYS);
-             PreparedStatement psLigne   = conn.prepareStatement(sqlLigne);
-             PreparedStatement psStock   = conn.prepareStatement(sqlStock)) {
+             PreparedStatement psLigne = conn.prepareStatement(sqlLigne);
+             PreparedStatement psStock = conn.prepareStatement(sqlStock)) {
 
             conn.setAutoCommit(false);
 
-            // 1) Insert de la commande
+            // 1) Insertion de la commande
             psCommande.setInt(1, panier.getUserId());
             psCommande.setDouble(2, totalTTC);
             psCommande.setString(3, adresseLivraison);
@@ -54,7 +66,7 @@ public class CommandeDAOImpl implements CommandeDAO {
                 return false;
             }
 
-            // 2) Récupération de l'ID généré
+            // 2) Récupération de l'ID généré pour la commande
             int cmdId;
             try (ResultSet rs = psCommande.getGeneratedKeys()) {
                 if (rs.next()) {
@@ -65,20 +77,20 @@ public class CommandeDAOImpl implements CommandeDAO {
                 }
             }
 
-            // 3) Insertion des lignes et mise à jour du stock
+            // 3) Insertion des lignes de commande et mise à jour du stock
             for (var e : panier.getArticles().entrySet()) {
                 int artId = e.getKey().getIdArticle();
-                int qty   = e.getValue();
+                int qty = e.getValue();
                 double prixLigne = e.getKey().getPrixUnitaire() * qty;
 
-                // Ligne de commande
+                // Insertion de la ligne de commande
                 psLigne.setInt(1, cmdId);
                 psLigne.setInt(2, artId);
                 psLigne.setInt(3, qty);
                 psLigne.setDouble(4, prixLigne);
                 psLigne.executeUpdate();
 
-                // Mise à jour stock
+                // Mise à jour du stock
                 psStock.setInt(1, qty);
                 psStock.setInt(2, artId);
                 psStock.setInt(3, qty);
@@ -97,21 +109,12 @@ public class CommandeDAOImpl implements CommandeDAO {
         }
     }
 
-    private boolean updateStock(Connection conn, int articleId, int quantite) throws SQLException {
-        String sql = """
-            UPDATE Article
-               SET stock = stock - ?
-             WHERE id_article = ?
-               AND stock >= ?
-            """;
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, quantite);
-            ps.setInt(2, articleId);
-            ps.setInt(3, quantite);
-            return ps.executeUpdate() == 1;
-        }
-    }
-
+    /**
+     * Annule une commande en mettant à jour son statut dans la base de données.
+     *
+     * @param commandeId L'ID de la commande à annuler.
+     * @return true si la commande a été annulée avec succès, false sinon.
+     */
     @Override
     public boolean annulerCommande(int commandeId) {
         String sql = "UPDATE Commande SET status='ANNULEE' WHERE id_commande = ?";
@@ -125,6 +128,12 @@ public class CommandeDAOImpl implements CommandeDAO {
         }
     }
 
+    /**
+     * Récupère une commande à partir de son ID.
+     *
+     * @param id L'ID de la commande à récupérer.
+     * @return La commande correspondante à l'ID, ou null si la commande n'est pas trouvée.
+     */
     @Override
     public Commande findById(int id) {
         Commande cmd = null;
@@ -156,6 +165,12 @@ public class CommandeDAOImpl implements CommandeDAO {
         return cmd;
     }
 
+    /**
+     * Récupère la liste des commandes passées par un utilisateur, en fonction de son ID.
+     *
+     * @param userId L'ID de l'utilisateur pour lequel récupérer les commandes.
+     * @return Une liste de commandes passées par l'utilisateur.
+     */
     @Override
     public List<Commande> findByUser(int userId) {
         List<Commande> list = new ArrayList<>();
