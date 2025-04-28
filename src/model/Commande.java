@@ -11,14 +11,22 @@ public class Commande {
     private Date dateCommande;
     private double totalCommande;
 
-    public Commande() {
-    }
+    private String adresseLivraison;
+    private String status;       // "EN_COURS", "LIVREE", "ANNULEE"
+    private Date dateLivraison;
 
-    public Commande(int idCommande, int idUtilisateur, Date dateCommande, double totalCommande) {
+    public Commande() {}
+
+    public Commande(int idCommande, int idUtilisateur, Date dateCommande,
+                    double totalCommande, String adresseLivraison,
+                    String status, Date dateLivraison) {
         this.idCommande = idCommande;
         this.idUtilisateur = idUtilisateur;
         this.dateCommande = dateCommande;
         this.totalCommande = totalCommande;
+        this.adresseLivraison = adresseLivraison;
+        this.status = status;
+        this.dateLivraison = dateLivraison;
     }
 
     public int getIdCommande() {
@@ -51,5 +59,29 @@ public class Commande {
 
     public void setTotalCommande(double totalCommande) {
         this.totalCommande = totalCommande;
+    }
+
+    public String getAdresseLivraison() {
+        return adresseLivraison;
+    }
+
+    public void setAdresseLivraison(String adresseLivraison) {
+        this.adresseLivraison = adresseLivraison;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Date getDateLivraison() {
+        return dateLivraison;
+    }
+
+    public void setDateLivraison(Date dateLivraison) {
+        this.dateLivraison = dateLivraison;
     }
 }

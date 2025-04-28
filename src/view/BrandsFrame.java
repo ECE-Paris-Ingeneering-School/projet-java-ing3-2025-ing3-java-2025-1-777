@@ -1,6 +1,9 @@
+// src/view/BrandsFrame.java
 package view;
 
+import Controlers.CartController;
 import Controlers.ProductController;
+import Controlers.ShoppingController;
 import DAO.MarqueDAO;
 import DAO.MarqueDAOImpl;
 import model.Article;
@@ -18,10 +21,11 @@ import java.util.List;
  */
 public class BrandsFrame extends JFrame {
 
-    private final MarqueDAO        marqueDAO        = new MarqueDAOImpl();
-    private final ProductController prodCtrl         = new ProductController();
-    private final JPanel           brandListPanel   = new JPanel();
-    private final JPanel           productsGridPanel= new JPanel();
+    private final MarqueDAO         marqueDAO         = new MarqueDAOImpl();
+    private final ProductController prodCtrl          = new ProductController();
+    private final CartController    cartController    = ShoppingController.getInstance().getCartController();
+    private final JPanel            brandListPanel    = new JPanel();
+    private final JPanel            productsGridPanel = new JPanel();
 
     public BrandsFrame() {
         setTitle("Loro Piana – Marques");
@@ -31,17 +35,17 @@ public class BrandsFrame extends JFrame {
         setLayout(new BorderLayout());
         getContentPane().setBackground(NavigationBarPanel.BACKGROUND_COLOR);
 
+        // Barre de navigation
+        add(new NavigationBarPanel(cartController), BorderLayout.NORTH);
 
-        add(new NavigationBarPanel(), BorderLayout.NORTH);
-
-
+        // Split pane
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         split.setDividerLocation(250);
         split.setResizeWeight(0);
         split.setBorder(null);
         split.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
 
-
+        // Left panel : liste des marques
         JPanel left = new JPanel(new BorderLayout());
         left.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
 
@@ -61,19 +65,18 @@ public class BrandsFrame extends JFrame {
             lbl.setForeground(NavigationBarPanel.TEXT_COLOR);
             lbl.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             lbl.setBorder(new EmptyBorder(8, 0, 8, 0));
-
             lbl.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     reloadProducts(m);
-
+                    // on remet tous les labels à fond transparent
                     for (Component c : brandListPanel.getComponents()) {
                         if (c instanceof JComponent jc) {
                             jc.setOpaque(false);
                             jc.setBackground(null);
                         }
                     }
-
+                    // et on surligne le label cliqué
                     lbl.setOpaque(true);
                     lbl.setBackground(new Color(230, 220, 200));
                 }
@@ -82,14 +85,14 @@ public class BrandsFrame extends JFrame {
         }
 
         left.add(new JScrollPane(
-                        brandListPanel,
-                        JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                        JScrollPane.HORIZONTAL_SCROLLBAR_NEVER),
-                BorderLayout.CENTER);
+                brandListPanel,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        ), BorderLayout.CENTER);
 
         split.setLeftComponent(left);
 
-
+        // Right panel : grille produits
         productsGridPanel.setLayout(new GridLayout(0, 3, 20, 20));
         productsGridPanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         productsGridPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
@@ -105,14 +108,14 @@ public class BrandsFrame extends JFrame {
         split.setRightComponent(sp);
         add(split, BorderLayout.CENTER);
 
-        // footer
+        // Footer
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.CENTER));
         footer.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         footer.setBorder(new EmptyBorder(10,10,10,10));
         footer.add(new JLabel("© 2025 Loro Piana – All Rights Reserved"));
         add(footer, BorderLayout.SOUTH);
 
-
+        // Sélection automatique de la première marque
         if (!marques.isEmpty()) {
             SwingUtilities.invokeLater(() -> {
                 Component first = brandListPanel.getComponent(0);
@@ -132,7 +135,7 @@ public class BrandsFrame extends JFrame {
         int count = 0;
         for (Article a : prodCtrl.getCatalogue()) {
             if (a.getIdMarque() == m.getIdMarque()) {
-                productsGridPanel.add(new ProductCardPanel(a, prodCtrl));
+                productsGridPanel.add(new ProductCardPanel(a, prodCtrl, cartController));
                 count++;
             }
         }

@@ -16,9 +16,9 @@ public class Main {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             Connection conn = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:8889/Shopping?useSSL=false&serverTimezone=UTC",
-                    "root",
-                    "root"
+                    "jdbc:mysql://localhost:3306/Shopping?useSSL=false&serverTimezone=UTC",
+                    "",
+                    ""
             );
             System.out.println("Connexion réussie !");
             conn.close();

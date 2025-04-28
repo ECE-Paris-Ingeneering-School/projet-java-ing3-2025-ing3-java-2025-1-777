@@ -15,6 +15,7 @@ public class Marque {
         this.nom = nom;
     }
 
+
     public int getIdMarque() {
         return idMarque;
     }
@@ -29,5 +30,9 @@ public class Marque {
 
     public void setNom(String nom) {
         this.nom = nom;
+    }
+    @Override
+    public String toString() {
+        return nom;
     }
 }

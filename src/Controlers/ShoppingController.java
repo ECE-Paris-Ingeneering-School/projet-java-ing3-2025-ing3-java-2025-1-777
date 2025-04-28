@@ -1,98 +1,71 @@
 package Controlers;
 
-import DAO.ArticleDAO;
-import DAO.ArticleDAOImpl;
-import DAO.UtilisateurDAO;
-import DAO.UtilisateurDAOImpl;
+import DAO.*;
 import model.Article;
+import model.Discount;
 import model.Utilisateur;
+
 import java.util.List;
 
-
 public class ShoppingController {
-    private Utilisateur currentUser;
-    private UtilisateurDAO utilisateurDAO;
-    private ArticleDAO articleDAO;
-    private static CartController cartController;
     private static ShoppingController instance;
-    private int currentUserId;
+    private final UtilisateurDAO utilisateurDAO = new UtilisateurDAOImpl();
+    private final ArticleDAO articleDAO = new ArticleDAOImpl();
+    private CartController cartController;
+    private Utilisateur currentUser;
 
-    public ShoppingController() {
-        this.utilisateurDAO = new UtilisateurDAOImpl();
-        this.articleDAO = new ArticleDAOImpl();
+    private ShoppingController() {}
+
+    public static ShoppingController getInstance() {
+        if (instance == null) instance = new ShoppingController();
+        return instance;
     }
 
+    public Utilisateur login(String email, String password) {
+        currentUser = utilisateurDAO.findByEmailAndPassword(email, password);
+        if (currentUser != null) {
+            cartController = new CartController(currentUser.getIdUtilisateur());
+        }
+        return currentUser;
+    }
+
+    /** Retourne le panier (après login). */
     public CartController getCartController() {
         if (cartController == null) {
-            throw new IllegalStateException("Connectez-vous d'abord.");
+            // user non connecté → panier vide avec id 0
+            cartController = new CartController(0);
         }
         return cartController;
     }
 
-    public static ShoppingController getInstance() {
-        if (instance == null) {
-            instance = new ShoppingController();
-        }
-        return instance;
-    }
-
-    public void initializePanier(int userId) {
-        this.cartController = new CartController(userId);
-    }
-
-    public List<Article> getCatalogue() {
+    public List<model.Article> getCatalogue() {
         return articleDAO.findAll();
     }
 
+    /** Calcul prix avec bulk */
     public double calculerPrixArticle(Article article, int quantite) {
-        double prixTotal = 0.0;
-        int quantiteBulk = article.getQuantiteBulk();
-        if (quantite >= quantiteBulk) {
-            int nbBulk = quantite / quantiteBulk;
-            int reste = quantite % quantiteBulk;
-            prixTotal = nbBulk * article.getPrixBulk() + reste * article.getPrixUnitaire();
+        double pu = article.getPrixUnitaire();
+        int seuil = article.getQuantiteBulk();
+        if (quantite >= seuil) {
+            double tauxRemise = article.getPrixBulk() / 100.0;
+            return quantite * pu * (1 - tauxRemise);
         } else {
-            prixTotal = quantite * article.getPrixUnitaire();
+            return quantite * pu;
         }
-        return prixTotal;
     }
 
-    public Utilisateur login(String email, String password) {
-        this.currentUser = utilisateurDAO.findByEmailAndPassword(email, password);
-        if (currentUser != null) {
-            this.cartController = new CartController(currentUser.getIdUtilisateur());
-        }
-        return currentUser;
-    }
-
-    public void setCurrentUser(Utilisateur user) {
-        this.currentUser = user;
-        this.cartController = new CartController(user.getIdUtilisateur());
-    }
-
+    /** Utilisateur courant */
     public Utilisateur getCurrentUser() {
         return currentUser;
     }
-
-    public boolean register(Utilisateur user) {
-        if (user == null) return false;
-
-        if (utilisateurDAO.emailExists(user.getEmail())) {
-            return false;
+    // src/Controlers/ShoppingController.java
+    public double calculerPrixArticleAvecRemise(Article art,int q){
+        double total = calculerPrixArticle(art,q);
+        Discount promo = new DiscountDAOImpl().findByArticle(art.getIdArticle());
+        if(promo!=null){
+            total = total * (1 - promo.getTaux()/100.0);
         }
-
-
-        user.setMotDePasse(hashPassword(user.getMotDePasse()));
-
-        if (user.getRole() == null) {
-            user.setRole("client");
-        }
-
-        return utilisateurDAO.insert(user);
+        return total;
     }
 
-    private String hashPassword(String plainPassword) {
-
-        return plainPassword;
-    }
 }

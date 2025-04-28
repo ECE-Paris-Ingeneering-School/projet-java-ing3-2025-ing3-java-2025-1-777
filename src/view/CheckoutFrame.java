@@ -1,138 +1,170 @@
+// src/view/CheckoutFrame.java
 package view;
 
 import Controlers.CartController;
+import DAO.CommandeDAO;
 import DAO.CommandeDAOImpl;
 import model.Article;
+import model.Commande;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.List;
 import java.util.Map;
 
 public class CheckoutFrame extends JFrame {
+    private final CartController cartController;
+
+    private final JTextField addressField;
+    private final JTextField cityField;
+    private final JTextField postalField;
+    private final JTextField cardNumberField;
+    private final JTextField expiryField;
+    private final JTextField cvvField;
 
     public CheckoutFrame(CartController cartController) {
-        setTitle("Validation de commande");
-        setSize(600, 650);
+        this.cartController = cartController;
+
+        setTitle("Validation de la commande - Loro Piana");
+        setSize(700, 700);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         getContentPane().setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+        setLayout(new BorderLayout(10, 10));
 
-        //logo
-        JPanel header = new JPanel();
-        header.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
-        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-        header.setBorder(new EmptyBorder(10, 10, 0, 10));
+        // --- HEADER ---
+        JLabel title = new JLabel("Récapitulatif de votre commande", SwingConstants.CENTER);
+        title.setFont(new Font("SansSerif", Font.BOLD, 20));
+        add(title, BorderLayout.NORTH);
 
-        JLabel brandLabel = new JLabel("Loro Piana");
-        brandLabel.setFont(new Font("Snell Roundhand", Font.PLAIN, 28));
-        brandLabel.setForeground(NavigationBarPanel.TEXT_COLOR);
-        brandLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        header.add(brandLabel);
+        // --- CENTER : récap + formulaire ---
+        JPanel center = new JPanel();
+        center.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+        center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
+        center.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        add(header, BorderLayout.NORTH);
+        // 1) RÉCAPITULATIF DES ARTICLES
+        JPanel recapPanel = new JPanel();
+        recapPanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+        recapPanel.setLayout(new BoxLayout(recapPanel, BoxLayout.Y_AXIS));
+        recapPanel.setBorder(BorderFactory.createTitledBorder("Vos articles"));
 
-
-
-        // RÉCAPITULATIF PANIER
-
-        JPanel recap = new JPanel();
-        recap.setLayout(new BoxLayout(recap, BoxLayout.Y_AXIS));
-        recap.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
-        recap.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        for (Map.Entry<Article, Integer> e : cartController.getPanier().getArticles().entrySet()) {
-            Article a = e.getKey();
-            int qte   = e.getValue();
-            JPanel line = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            line.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
-
-            JLabel name = new JLabel(a.getNom() + " x" + qte);
-            name.setForeground(NavigationBarPanel.TEXT_COLOR);
-            line.add(name);
-
-            JLabel price = new JLabel(String.format("%.2f €", a.getPrixUnitaire()*qte));
-            price.setForeground(NavigationBarPanel.TEXT_COLOR);
-            line.add(price);
-
-            recap.add(line);
-        }
-        add(recap, BorderLayout.CENTER);
-
-        // FORMULAIRE
-        JPanel form = new JPanel(new GridLayout(8, 2, 6, 6));
-        form.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
-        form.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        String[] lbls = {
-                "Nom :", "Prénom :", "Adresse :", "Ville :",
-                "Code postal :", "Numéro de carte :", "Date d'expiration :", "CVV :"
-        };
-        JTextField[] fields = new JTextField[lbls.length];
-
-        for (int i = 0; i < lbls.length; i++) {
-            JLabel l = new JLabel(lbls[i]);
-            l.setForeground(NavigationBarPanel.TEXT_COLOR);
-            fields[i] = new JTextField();
-            form.add(l);
-            form.add(fields[i]);
-        }
-        add(form, BorderLayout.WEST);
-
-        // FOOTER : total + bouton confirmer
-
-        JPanel footer = new JPanel(new BorderLayout());
-        footer.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
-        footer.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        JLabel total = new JLabel("Total : "
-                + String.format("%.2f €", cartController.getPanier().calculerTotal()));
-        total.setForeground(NavigationBarPanel.TEXT_COLOR);
-        total.setFont(new Font("SansSerif", Font.BOLD, 16));
-        footer.add(total, BorderLayout.WEST);
-
-        JButton confirm = new JButton("Confirmer la commande");
-        confirm.setFocusPainted(false);
-        confirm.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
-        confirm.setForeground(NavigationBarPanel.MENU_HOVER_COLOR);
-        confirm.setBorder(BorderFactory.createLineBorder(NavigationBarPanel.LINE_COLOR));
-        confirm.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        confirm.addActionListener((ActionEvent e) -> {
-            if (validateForm(fields)) {
-                boolean ok = new CommandeDAOImpl().creerCommande(
-                        cartController.getPanier(), fields[2].getText()
-                );
-                if (ok) {
-                    JOptionPane.showMessageDialog(this,
-                            "Commande validée avec succès !",
-                            "Succès", JOptionPane.INFORMATION_MESSAGE);
-                    cartController.viderPanier();
-                    dispose();
-                }
+        // Affichage ligne à ligne
+        for (Map.Entry<Article, Integer> entry : cartController.getPanier().getArticles().entrySet()) {
+            Article art = entry.getKey();
+            int qty = entry.getValue();
+            // on reprend le calcul HT pour l'affichage par ligne
+            int bulkQty     = art.getQuantiteBulk();
+            double unit     = art.getPrixUnitaire();
+            double bulkPrice= art.getPrixBulk();
+            double linePrice;
+            if (bulkQty > 0 && qty >= bulkQty) {
+                int groups    = qty / bulkQty;
+                int remainder = qty % bulkQty;
+                linePrice = groups * bulkPrice + remainder * unit;
+            } else {
+                linePrice = qty * unit;
             }
-        });
+            recapPanel.add(new JLabel(qty + " × " + art.getNom() + "   →   "
+                    + String.format("%.2f €", linePrice)));
+        }
 
-        JPanel btnWrap = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        btnWrap.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
-        btnWrap.add(confirm);
-        footer.add(btnWrap, BorderLayout.EAST);
+        // 2) TOTAL TTC
+        double totalTTC = cartController.calculerTotalTTC();
+        JLabel totalLabel = new JLabel("Total (TTC) : " + String.format("%.2f €", totalTTC));
+        totalLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        recapPanel.add(Box.createVerticalStrut(10));
+        recapPanel.add(totalLabel);
+
+        center.add(recapPanel);
+        center.add(Box.createVerticalStrut(20));
+
+        // 3) FORMULAIRE DE LIVRAISON & PAIEMENT
+        JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));
+        formPanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+        formPanel.setBorder(BorderFactory.createTitledBorder("Livraison & paiement"));
+
+        formPanel.add(new JLabel("Adresse :"));
+        addressField = new JTextField(); formPanel.add(addressField);
+
+        formPanel.add(new JLabel("Ville :"));
+        cityField = new JTextField(); formPanel.add(cityField);
+
+        formPanel.add(new JLabel("Code postal :"));
+        postalField = new JTextField(); formPanel.add(postalField);
+
+        formPanel.add(new JLabel("N° de carte :"));
+        cardNumberField = new JTextField(); formPanel.add(cardNumberField);
+
+        formPanel.add(new JLabel("Date d'expiration (MM/AA) :"));
+        expiryField = new JTextField(); formPanel.add(expiryField);
+
+        formPanel.add(new JLabel("CVV :"));
+        cvvField = new JTextField(); formPanel.add(cvvField);
+
+        center.add(formPanel);
+        add(new JScrollPane(center), BorderLayout.CENTER);
+
+        // --- FOOTER : bouton valider ---
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        footer.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
+
+        JButton validateButton = new JButton("Valider la commande");
+        validateButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        validateButton.addActionListener(this::onValidate);
+        footer.add(validateButton);
 
         add(footer, BorderLayout.SOUTH);
     }
 
-    // message d'erreur
-    private boolean validateForm(JTextField[] f) {
-        for (JTextField t : f)
-            if (t.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Veuillez remplir tous les champs",
-                        "Erreur",
-                        JOptionPane.ERROR_MESSAGE
-                );
-                return false;
-            }
-        return true;
+    private void onValidate(ActionEvent e) {
+        // Vérification des champs
+        if (addressField.getText().isBlank() ||
+                cityField.getText().isBlank()    ||
+                postalField.getText().isBlank()  ||
+                cardNumberField.getText().isBlank() ||
+                expiryField.getText().isBlank()  ||
+                cvvField.getText().isBlank()
+        ) {
+            JOptionPane.showMessageDialog(this,
+                    "Veuillez remplir tous les champs.",
+                    "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Construction de l’adresse complète
+        String fullAddress = addressField.getText().trim()
+                + ", " + cityField.getText().trim()
+                + " "   + postalField.getText().trim();
+
+        // Enregistrement en base
+        CommandeDAO dao = new CommandeDAOImpl();
+        boolean ok = dao.creerCommande(cartController.getPanier(), fullAddress);
+        if (!ok) {
+            JOptionPane.showMessageDialog(this,
+                    "Échec de l'enregistrement de la commande.",
+                    "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Confirmation et affichage de la ConfirmationFrame
+        JOptionPane.showMessageDialog(this,
+                "Commande enregistrée avec succès !",
+                "Succès", JOptionPane.INFORMATION_MESSAGE);
+
+        cartController.viderPanier();
+        dispose();
+
+        // Récupère la dernière commande et affiche la ConfirmationFrame
+        int userId = cartController.getPanier().getUserId();
+        List<Commande> commandes = dao.findByUser(userId);
+        if (!commandes.isEmpty()) {
+            int lastId = commandes.get(0).getIdCommande();
+            SwingUtilities.invokeLater(() ->
+                    new ConfirmationFrame(lastId).setVisible(true)
+            );
+        }
     }
 }

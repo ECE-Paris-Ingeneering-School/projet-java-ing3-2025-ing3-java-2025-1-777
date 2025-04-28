@@ -28,6 +28,13 @@ public class ArticleDAOImpl implements ArticleDAO {
                     article.setQuantiteBulk(rs.getInt("quantite_bulk"));
                     article.setStock(rs.getInt("stock"));
                     article.setIdMarque(rs.getInt("id_marque"));
+                    // on récupère le chemin unique et on le stocke dans la liste
+                    String img = rs.getString("image_path");
+                    if (img != null) {
+                        List<String> paths = new ArrayList<>();
+                        paths.add(img);
+                        article.setImagePaths(paths);
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -54,6 +61,12 @@ public class ArticleDAOImpl implements ArticleDAO {
                 a.setQuantiteBulk(rs.getInt("quantite_bulk"));
                 a.setStock(rs.getInt("stock"));
                 a.setIdMarque(rs.getInt("id_marque"));
+                String img = rs.getString("image_path");
+                if (img != null) {
+                    List<String> paths = new ArrayList<>();
+                    paths.add(img);
+                    a.setImagePaths(paths);
+                }
                 articles.add(a);
             }
         } catch (SQLException e) {
@@ -65,8 +78,8 @@ public class ArticleDAOImpl implements ArticleDAO {
     @Override
     public boolean insert(Article article) {
         String sql = "INSERT INTO Article "
-                + "(nom, description, prix_unitaire, prix_bulk, quantite_bulk, stock, id_marque) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                + "(nom, description, prix_unitaire, prix_bulk, quantite_bulk, stock, id_marque, image_path) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -77,6 +90,12 @@ public class ArticleDAOImpl implements ArticleDAO {
             ps.setInt(5, article.getQuantiteBulk());
             ps.setInt(6, article.getStock());
             ps.setInt(7, article.getIdMarque());
+            // on prend la première image du panier, ou null
+            if (article.getImagePath() != null) {
+                ps.setString(8, article.getImagePath());
+            } else {
+                ps.setNull(8, Types.VARCHAR);
+            }
 
             int rows = ps.executeUpdate();
             if (rows > 0) {
@@ -97,7 +116,7 @@ public class ArticleDAOImpl implements ArticleDAO {
     public boolean update(Article article) {
         String sql = "UPDATE Article SET "
                 + "nom = ?, description = ?, prix_unitaire = ?, prix_bulk = ?, "
-                + "quantite_bulk = ?, stock = ?, id_marque = ? "
+                + "quantite_bulk = ?, stock = ?, id_marque = ?, image_path = ? "
                 + "WHERE id_article = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -109,7 +128,12 @@ public class ArticleDAOImpl implements ArticleDAO {
             ps.setInt(5, article.getQuantiteBulk());
             ps.setInt(6, article.getStock());
             ps.setInt(7, article.getIdMarque());
-            ps.setInt(8, article.getIdArticle());
+            if (article.getImagePath() != null) {
+                ps.setString(8, article.getImagePath());
+            } else {
+                ps.setNull(8, Types.VARCHAR);
+            }
+            ps.setInt(9, article.getIdArticle());
 
             return ps.executeUpdate() == 1;
         } catch (SQLException e) {
@@ -123,7 +147,6 @@ public class ArticleDAOImpl implements ArticleDAO {
         String sql = "DELETE FROM Article WHERE id_article = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, id);
             return ps.executeUpdate() == 1;
         } catch (SQLException e) {
@@ -151,6 +174,12 @@ public class ArticleDAOImpl implements ArticleDAO {
                     a.setQuantiteBulk(rs.getInt("quantite_bulk"));
                     a.setStock(rs.getInt("stock"));
                     a.setIdMarque(rs.getInt("id_marque"));
+                    String img = rs.getString("image_path");
+                    if (img != null) {
+                        List<String> paths = new ArrayList<>();
+                        paths.add(img);
+                        a.setImagePaths(paths);
+                    }
                     articles.add(a);
                 }
             }
@@ -167,7 +196,6 @@ public class ArticleDAOImpl implements ArticleDAO {
 
     @Override
     public List<Article> getAllArticles() {
-
         return findAll();
     }
 }

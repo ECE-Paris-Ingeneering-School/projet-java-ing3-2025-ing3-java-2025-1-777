@@ -22,6 +22,15 @@ public class ProductController {
     public Article getProductById(int id) {
         return articleDAO.findById(id);
     }
+    public boolean createArticle(Article a) {
+        return articleDAO.insert(a);
+    }
+    public boolean updateArticle(Article a) {
+        return articleDAO.update(a);
+    }
+    public boolean deleteArticle(int id) {
+        return articleDAO.delete(id);
+    }
 
 
     public boolean addProduct(Article a) {
