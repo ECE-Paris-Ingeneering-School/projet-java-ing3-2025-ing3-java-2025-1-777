@@ -8,7 +8,8 @@ import Controlers.ShoppingController;
 import model.Commande;
 import model.LigneCommande;
 import model.Article;
-
+import model.Discount;
+import DAO.DiscountDAOImpl;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
@@ -52,21 +53,37 @@ public class ConfirmationFrame extends JFrame {
         add(info, BorderLayout.CENTER);
 
         String[] cols = {"Article", "Qté", "Prix unitaire", "Total"};
-        DefaultTableModel tm = new DefaultTableModel(cols,0) {
+        DefaultTableModel tm = new DefaultTableModel(cols, 0) {
             @Override
-            public boolean isCellEditable(int r,int c){
+            public boolean isCellEditable(int r, int c) {
                 return false;
             }
         };
         JTable table = new JTable(tm);
+
         for (LigneCommande l : lignes) {
-            Article a = catalogue.stream().filter(x->x.getIdArticle()==l.getIdArticle()).findFirst().orElse(null);
-            if (a!=null) {
-                tm.addRow(new Object[]{ a.getNom(), l.getQuantite(), String.format("%.2f €", a.getPrixUnitaire()), String.format("%.2f €", l.getPrixTotal())});
+            Article a = catalogue.stream().filter(x -> x.getIdArticle() == l.getIdArticle()).findFirst().orElse(null);
+            if (a != null) {
+                // Appliquer la remise avant d'afficher le prix unitaire et total
+                Discount discount = new DiscountDAOImpl().getDiscountForArticle(a.getIdArticle());
+                double unitPrice = a.getPrixUnitaire();
+                if (discount != null) {
+                    unitPrice = unitPrice * (1 - discount.getTaux() / 100); // Appliquer la remise
+                }
+
+                double totalPrice = unitPrice * l.getQuantite();
+
+                tm.addRow(new Object[]{
+                        a.getNom(),
+                        l.getQuantite(),
+                        String.format("%.2f €", unitPrice),
+                        String.format("%.2f €", totalPrice)
+                });
             }
         }
+
         JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(new EmptyBorder(10,20,10,20));
+        scroll.setBorder(new EmptyBorder(10, 20, 10, 20));
         add(scroll, BorderLayout.SOUTH);
 
         double ht  = lignes.stream().mapToDouble(LigneCommande::getPrixTotal).sum();

@@ -1,3 +1,4 @@
+// src/view/CheckoutFrame.java
 package view;
 
 import Controlers.CartController;
@@ -7,6 +8,7 @@ import model.Article;
 import DAO.DiscountDAOImpl;
 import model.Commande;
 import model.Discount;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -180,7 +182,7 @@ public class CheckoutFrame extends JFrame {
     }
 
     private void onValidate(ActionEvent e) {
-        // Vérification des champs
+        // Validation des champs de saisie
         if (addressField.getText().isBlank() ||
                 cityField.getText().isBlank()    ||
                 postalField.getText().isBlank()  ||
@@ -194,26 +196,50 @@ public class CheckoutFrame extends JFrame {
             return;
         }
 
+        // Validation de la ville (lettres uniquement)
+        if (!cityField.getText().matches("[a-zA-Z ]+")) {
+            JOptionPane.showMessageDialog(this, "La ville doit contenir uniquement des lettres.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Validation du code postal (5 chiffres)
+        if (!postalField.getText().matches("[0-9]{5}")) {
+            JOptionPane.showMessageDialog(this, "Le code postal doit contenir 5 chiffres.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Validation du numéro de carte (16 chiffres)
+        if (!cardNumberField.getText().replace(" ", "").matches("[0-9]{16}")) {
+            JOptionPane.showMessageDialog(this, "Le numéro de carte doit contenir 16 chiffres.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Validation de la date d'expiration (format MM/AA)
+        if (!expiryField.getText().matches("[0-9]{2}/[0-9]{2}")) {
+            JOptionPane.showMessageDialog(this, "La date d'expiration doit être au format MM/AA.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Validation du CVV (3 chiffres)
+        if (!cvvField.getText().matches("[0-9]{3}")) {
+            JOptionPane.showMessageDialog(this, "Le CVV doit contenir 3 chiffres.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         // Construction de l’adresse complète
         String fullAddress = addressField.getText().trim()
                 + ", " + cityField.getText().trim()
-                + " "   + postalField.getText().trim();
+                + " " + postalField.getText().trim();
 
         // Enregistrement en base
         CommandeDAO dao = new CommandeDAOImpl();
         boolean ok = dao.creerCommande(cartController.getPanier(), fullAddress);
         if (!ok) {
-            JOptionPane.showMessageDialog(this,
-                    "Échec de l'enregistrement de la commande.",
-                    "Erreur", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Échec de l'enregistrement de la commande.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // Confirmation et affichage de la ConfirmationFrame
-        JOptionPane.showMessageDialog(this,
-                "Commande enregistrée avec succès !",
-                "Succès", JOptionPane.INFORMATION_MESSAGE);
-
+        JOptionPane.showMessageDialog(this, "Commande enregistrée avec succès !", "Succès", JOptionPane.INFORMATION_MESSAGE);
         cartController.viderPanier();
         dispose();
 
@@ -222,9 +248,7 @@ public class CheckoutFrame extends JFrame {
         List<Commande> commandes = dao.findByUser(userId);
         if (!commandes.isEmpty()) {
             int lastId = commandes.get(0).getIdCommande();
-            SwingUtilities.invokeLater(() ->
-                    new ConfirmationFrame(lastId).setVisible(true)
-            );
+            SwingUtilities.invokeLater(() -> new ConfirmationFrame(lastId).setVisible(true));
         }
     }
 }
