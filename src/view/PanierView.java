@@ -1,4 +1,3 @@
-// src/view/PanierView.java
 package view;
 
 import Controlers.CartController;
@@ -41,7 +40,7 @@ public class PanierView extends JFrame {
         setLayout(new BorderLayout());
         getContentPane().setBackground(NavigationBarPanel.BACKGROUND_COLOR);
 
-        // HEADER
+
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         header.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         JLabel logo = new JLabel("Loro Piana");
@@ -55,7 +54,7 @@ public class PanierView extends JFrame {
 
         add(header, BorderLayout.NORTH);
 
-        // LIGNES
+ 
         linesPanel.setLayout(new BoxLayout(linesPanel, BoxLayout.Y_AXIS));
         linesPanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         linesPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -68,7 +67,7 @@ public class PanierView extends JFrame {
         scroll.getViewport().setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         add(scroll, BorderLayout.CENTER);
 
-        // FOOTER
+   
         JPanel footer = new JPanel();
         footer.setLayout(new BoxLayout(footer, BoxLayout.Y_AXIS));
         footer.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
@@ -103,17 +102,17 @@ public class PanierView extends JFrame {
     }
 
     private void rebuildLines() {
-        linesPanel.removeAll(); // Vider le panneau des lignes
-        lines.clear(); // Vider la liste des lignes
+        linesPanel.removeAll(); 
+        lines.clear(); 
 
-        // Recréer les lignes
+   
         for (var entry : cartController.getPanier().getArticles().entrySet()) {
             Line line = new Line(entry.getKey(), entry.getValue());
             lines.add(line);
             linesPanel.add(line.panel);
         }
-        linesPanel.revalidate(); // Rafraîchir le panel
-        linesPanel.repaint(); // Rafraîchir l'affichage
+        linesPanel.revalidate(); 
+        linesPanel.repaint(); 
     }
 
     private void updateTotals() {
@@ -121,8 +120,8 @@ public class PanierView extends JFrame {
         double tva = ht * 0.20;
         double ttc = ht + tva;
         htLabel.setText(String.format("Sous-total (HT) : %.2f €", ht));
-        tvaLabel.setText(      String.format("TVA (20%%)      : %.2f €", tva));
-        ttcLabel.setText(      String.format("Total (TTC)    : %.2f €", ttc));
+        tvaLabel.setText( String.format("TVA (20%%) : %.2f €", tva));
+        ttcLabel.setText( String.format("Total (TTC) : %.2f €", ttc));
     }
 
     private class Line {
@@ -141,7 +140,7 @@ public class PanierView extends JFrame {
             panel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
             panel.setBorder(BorderFactory.createMatteBorder(0,0,1,0, NavigationBarPanel.LINE_COLOR));
 
-            // ROW1
+        
             JPanel row1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
             row1.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
 
@@ -175,14 +174,14 @@ public class PanierView extends JFrame {
             del.setBorder(BorderFactory.createLineBorder(NavigationBarPanel.LINE_COLOR));
             del.addActionListener(e -> {
                 cartController.supprimerArticle(art);
-                rebuildLines(); // Rebuild de l'affichage après suppression
-                updateTotals(); // Mise à jour des totaux
+                rebuildLines(); 
+                updateTotals(); 
             });
             row1.add(del);
 
             panel.add(row1);
 
-            // bulk / détail
+           
             bulkLineRed = new JLabel();
             bulkLineRed.setForeground(Color.RED);
             bulkLineRed.setFont(bulkLineRed.getFont().deriveFont(Font.BOLD));
@@ -215,29 +214,22 @@ public class PanierView extends JFrame {
             // Appliquer la réduction si elle existe
             Discount discount = new DiscountDAOImpl().getDiscountForArticle(art.getIdArticle());
             if (discount != null) {
-                unitPrice = unitPrice * (1 - discount.getTaux() / 100);  // Appliquer la remise
+                unitPrice = unitPrice * (1 - discount.getTaux() / 100); 
             }
 
             if (bulkQty > 0 && q >= bulkQty) {
                 int packs = q / bulkQty;
-                int rest  = q % bulkQty;
+                int rest = q % bulkQty;
                 double totalPack = packs * bulkPrice;
                 double totalRest = rest  * unitPrice;
                 currentLineTotal = totalPack + totalRest;
 
-                bulkLineRed.setText(
-                        String.format("Prix lot (%d pcs) : %.2f €", bulkQty, bulkPrice)
-                );
-                lineDetail.setText(
-                        String.format("→ %d×%.2f€ + %d×%.2f€ = %.2f€",
-                                packs, bulkPrice, rest, unitPrice, currentLineTotal)
-                );
+                bulkLineRed.setText( String.format("Prix lot (%d pcs) : %.2f €", bulkQty, bulkPrice));
+                lineDetail.setText( String.format("→ %d×%.2f€ + %d×%.2f€ = %.2f€", packs, bulkPrice, rest, unitPrice, currentLineTotal));
             } else {
                 currentLineTotal = q * unitPrice;
                 bulkLineRed.setText(" ");
-                lineDetail.setText(
-                        String.format("→ %d×%.2f€ = %.2f€", q, unitPrice, currentLineTotal)
-                );
+                lineDetail.setText(String.format("→ %d×%.2f€ = %.2f€", q, unitPrice, currentLineTotal));
             }
         }
 
