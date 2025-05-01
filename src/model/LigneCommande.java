@@ -13,11 +13,7 @@ public class LigneCommande {
     public LigneCommande() {
     }
 
-    public LigneCommande(int idLigne,
-                         int idCommande,
-                         int idArticle,
-                         int quantite,
-                         double prixTotal) {
+    public LigneCommande(int idLigne,int idCommande,int idArticle,int quantite,double prixTotal) {
         this.idLigne    = idLigne;
         this.idCommande = idCommande;
         this.idArticle  = idArticle;
