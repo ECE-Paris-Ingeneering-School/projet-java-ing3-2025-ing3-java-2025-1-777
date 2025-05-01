@@ -27,7 +27,7 @@ public class LigneCommande {
         return idLigne;
     }
 
-    /** stter qui définit l'identifiant de la ligne de commande.
+    /** setter qui définit l'identifiant de la ligne de commande.
      */
     public void setIdLigne(int idLigne) {
         this.idLigne = idLigne;
