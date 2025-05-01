@@ -61,7 +61,7 @@ public class CheckoutFrame extends JFrame {
             Discount discount = new DiscountDAOImpl().getDiscountForArticle(art.getIdArticle());
             double unitPrice = art.getPrixUnitaire();
             if (discount != null) {
-                unitPrice = unitPrice * (1 - discount.getTaux() / 100); // Appliquer la remise
+                unitPrice = unitPrice * (1 - discount.getTaux() / 100); 
             }
 
             int bulkQty = art.getQuantiteBulk();
@@ -181,16 +181,8 @@ public class CheckoutFrame extends JFrame {
 
     private void onValidate(ActionEvent e) {
         // Validation des champs saisis par l'utilisateur
-        if (addressField.getText().isBlank() ||
-                cityField.getText().isBlank()    ||
-                postalField.getText().isBlank()  ||
-                cardNumberField.getText().isBlank() ||
-                expiryField.getText().isBlank()  ||
-                cvvField.getText().isBlank()
-        ) {
-            JOptionPane.showMessageDialog(this,
-                    "Veuillez remplir tous les champs.",
-                    "Erreur", JOptionPane.ERROR_MESSAGE);
+        if (addressField.getText().isBlank() || cityField.getText().isBlank() || postalField.getText().isBlank() || cardNumberField.getText().isBlank() || expiryField.getText().isBlank()  || cvvField.getText().isBlank()) {
+            JOptionPane.showMessageDialog(this, "Veuillez remplir tous les champs.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -224,9 +216,7 @@ public class CheckoutFrame extends JFrame {
             return;
         }
 
-        String fullAddress = addressField.getText().trim()
-                + ", " + cityField.getText().trim()
-                + " " + postalField.getText().trim();
+        String fullAddress = addressField.getText().trim() + ", " + cityField.getText().trim() + " " + postalField.getText().trim();
 
 
         CommandeDAO dao = new CommandeDAOImpl();
