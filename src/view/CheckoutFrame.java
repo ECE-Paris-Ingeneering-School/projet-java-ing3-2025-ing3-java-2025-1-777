@@ -1,4 +1,3 @@
-// src/view/CheckoutFrame.java
 package view;
 
 import Controlers.CartController;
@@ -18,7 +17,7 @@ import java.util.Map;
 
 public class CheckoutFrame extends JFrame {
     private final CartController cartController;
-    private JPanel recapPanel; // Déclaration du panneau de récapitulatif des articles
+    private JPanel recapPanel; 
 
     private final JTextField addressField;
     private final JTextField cityField;
@@ -37,24 +36,23 @@ public class CheckoutFrame extends JFrame {
         getContentPane().setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         setLayout(new BorderLayout(10, 10));
 
-        // --- HEADER ---
+      
         JLabel title = new JLabel("Récapitulatif de votre commande", SwingConstants.CENTER);
         title.setFont(new Font("SansSerif", Font.BOLD, 20));
         add(title, BorderLayout.NORTH);
 
-        // --- CENTER : récap + formulaire ---
         JPanel center = new JPanel();
         center.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
         center.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // 1) RÉCAPITULATIF DES ARTICLES
+        
         recapPanel = new JPanel();
         recapPanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         recapPanel.setLayout(new BoxLayout(recapPanel, BoxLayout.Y_AXIS));
         recapPanel.setBorder(BorderFactory.createTitledBorder("Vos articles"));
 
-        // Affichage ligne à ligne avec bouton de suppression
+  
         for (Map.Entry<Article, Integer> entry : cartController.getPanier().getArticles().entrySet()) {
             Article art = entry.getKey();
             int qty = entry.getValue();
@@ -77,18 +75,18 @@ public class CheckoutFrame extends JFrame {
                 linePrice = qty * unitPrice;
             }
 
-            // Ligne d'article avec bouton de suppression
+            
             JPanel articlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             articlePanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
             JLabel articleLabel = new JLabel(qty + " × " + art.getNom() + "   →   " + String.format("%.2f €", linePrice));
             articlePanel.add(articleLabel);
             JButton removeButton = new JButton("Supprimer");
-            removeButton.addActionListener(e -> removeArticle(art)); // Action pour supprimer l'article
+            removeButton.addActionListener(e -> removeArticle(art)); 
             articlePanel.add(removeButton);
             recapPanel.add(articlePanel);
         }
 
-        // 2) TOTAL TTC
+
         double totalTTC = cartController.calculerTotalTTC();
         JLabel totalLabel = new JLabel("Total (TTC) : " + String.format("%.2f €", totalTTC));
         totalLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
@@ -98,7 +96,7 @@ public class CheckoutFrame extends JFrame {
         center.add(recapPanel);
         center.add(Box.createVerticalStrut(20));
 
-        // 3) FORMULAIRE DE LIVRAISON & PAIEMENT
+        // FORMULAIRE DE LIVRAISON & PAIEMENT
         JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));
         formPanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
         formPanel.setBorder(BorderFactory.createTitledBorder("Livraison & paiement"));
@@ -124,7 +122,7 @@ public class CheckoutFrame extends JFrame {
         center.add(formPanel);
         add(new JScrollPane(center), BorderLayout.CENTER);
 
-        // --- FOOTER : bouton valider ---
+  
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         footer.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
 
@@ -142,11 +140,11 @@ public class CheckoutFrame extends JFrame {
      * @param article L'article à supprimer du panier.
      */
     private void removeArticle(Article article) {
-        // Suppression de l'article du panier
+      
         cartController.supprimerArticle(article);
 
-        // Mise à jour de l'affichage après la suppression
-        recapPanel.removeAll(); // Supprimer toutes les lignes d'article
+      
+        recapPanel.removeAll(); 
         for (Map.Entry<Article, Integer> entry : cartController.getPanier().getArticles().entrySet()) {
             Article art = entry.getKey();
             int qty = entry.getValue();
@@ -162,13 +160,13 @@ public class CheckoutFrame extends JFrame {
                 linePrice = qty * unit;
             }
 
-            // Ligne d'article mise à jour avec le bouton de suppression
+          
             JPanel articlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             articlePanel.setBackground(NavigationBarPanel.BACKGROUND_COLOR);
             JLabel articleLabel = new JLabel(qty + " × " + art.getNom() + "   →   " + String.format("%.2f €", linePrice));
             articlePanel.add(articleLabel);
             JButton removeButton = new JButton("Supprimer");
-            removeButton.addActionListener(e -> removeArticle(art)); // Action pour supprimer l'article
+            removeButton.addActionListener(e -> removeArticle(art)); 
             articlePanel.add(removeButton);
             recapPanel.add(articlePanel);
         }
@@ -182,7 +180,7 @@ public class CheckoutFrame extends JFrame {
     }
 
     private void onValidate(ActionEvent e) {
-        // Validation des champs de saisie
+        // Validation des champs saisis par l'utilisateur
         if (addressField.getText().isBlank() ||
                 cityField.getText().isBlank()    ||
                 postalField.getText().isBlank()  ||
@@ -196,42 +194,41 @@ public class CheckoutFrame extends JFrame {
             return;
         }
 
-        // Validation de la ville (lettres uniquement)
+
         if (!cityField.getText().matches("[a-zA-Z ]+")) {
             JOptionPane.showMessageDialog(this, "La ville doit contenir uniquement des lettres.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // Validation du code postal (5 chiffres)
+      
         if (!postalField.getText().matches("[0-9]{5}")) {
             JOptionPane.showMessageDialog(this, "Le code postal doit contenir 5 chiffres.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // Validation du numéro de carte (16 chiffres)
+       
         if (!cardNumberField.getText().replace(" ", "").matches("[0-9]{16}")) {
             JOptionPane.showMessageDialog(this, "Le numéro de carte doit contenir 16 chiffres.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // Validation de la date d'expiration (format MM/AA)
+      
         if (!expiryField.getText().matches("[0-9]{2}/[0-9]{2}")) {
             JOptionPane.showMessageDialog(this, "La date d'expiration doit être au format MM/AA.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // Validation du CVV (3 chiffres)
+
         if (!cvvField.getText().matches("[0-9]{3}")) {
             JOptionPane.showMessageDialog(this, "Le CVV doit contenir 3 chiffres.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // Construction de l’adresse complète
         String fullAddress = addressField.getText().trim()
                 + ", " + cityField.getText().trim()
                 + " " + postalField.getText().trim();
 
-        // Enregistrement en base
+
         CommandeDAO dao = new CommandeDAOImpl();
         boolean ok = dao.creerCommande(cartController.getPanier(), fullAddress);
         if (!ok) {
